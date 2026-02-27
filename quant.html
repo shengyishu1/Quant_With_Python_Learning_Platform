@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>QuantLingo — Python Quantitative Trading Learning Platform</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0a0f1e;color:#e2e8f0;line-height:1.6}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
+.pulse{animation:pulse 2s cubic-bezier(.4,0,.6,1) infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes glow{0%,100%{box-shadow:0 0 5px rgba(16,185,129,0.3)}50%{box-shadow:0 0 20px rgba(16,185,129,0.6)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes candleGrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@media(max-width:900px){.g2{grid-template-columns:1fr!important}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const{useState,useEffect,useRef,useCallback}=React;
+
+const I=({n,s=16})=>{const d={
+Play:'M5 3l14 9-14 9V3z',Rotate:'M1 4v6h6M3.51 15a9 9 0 1 0 2.13-9.36L1 10',
+Bulb:'M9 18h6M10 22h4M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14',
+Check:'M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4L12 14.01l-3-3',
+Lock:'M7 11V7a5 5 0 0 1 10 0v4M3 11h18v11H3z',
+Trophy:'M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M18 2H6v7a6 6 0 0 0 12 0V2Z',
+Flame:'M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z',
+Chat:'M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z',
+Send:'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z',Settings:'M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',X:'M18 6L6 18M6 6l12 12',
+Eye:'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z',
+Book:'M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z',
+Code:'M16 18l6-6-6-6M8 6l-6 6 6 6',Right:'M9 18l6-6-6-6',Left:'M15 18l-6-6 6-6',
+Star:'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z',
+Globe:'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z',
+Home:'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+Grid:'M10 3H3v7h7V3zM21 3h-7v7h7V3zM21 14h-7v7h7v-7zM10 14H3v7h7v-7z',
+Arrow:'M5 12h14M12 5l7 7-7 7',
+TrendUp:'M23 6l-9.5 9.5-5-5L1 18',
+BarChart:'M12 20V10M18 20V4M6 20v-4'
+};return d[n]?<svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={d[n]}/></svg>:null;};
+
+const getKey=()=>localStorage.getItem('ql-api-key')||'';
+const hasKey=()=>!!getKey();
+const PROXY_URL='https://scrape-lingo-proxy.shengyishu666.workers.dev';
+const callAPI=async(body)=>{
+  const k=getKey();
+  if(!k)throw new Error('No API key');
+  const r=await fetch(PROXY_URL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':k},
+    body:JSON.stringify(body)
+  });
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'API error '+r.status)}
+  return r.json();
+};
+
+const LANGS=[
+{code:'en',label:'English',flag:'🇬🇧'},{code:'zh',label:'中文',flag:'🇨🇳'},
+{code:'es',label:'Español',flag:'🇪🇸'},{code:'fr',label:'Français',flag:'🇫🇷'},
+{code:'ja',label:'日本語',flag:'🇯🇵'},{code:'ko',label:'한국어',flag:'🇰🇷'},
+{code:'pt',label:'Português',flag:'🇧🇷'},{code:'de',label:'Deutsch',flag:'🇩🇪'}];
+
+const UI={
+en:{learn:'Learn',practice:'Practice',hint:'Hint',hide:'Hide',solutions:'Solutions',viewSol:'📖 View Solution',yourOut:'Your output',bestPractice:'✨ Best Practice:',review:'Review',run:'Run',reset:'Reset',prev:'Previous',next:'Next',nextT:'Next Topic →',startEx:'Start Exercises',overall:'Overall',topics:'Topics',copy:'Copy to Editor',complete:'Complete all to continue',ex:'Exercise',of:'of',ask:'Ask anything...',tutor:'AI Tutor',think:'Thinking...',fail:'Connection failed. Try the hint!',showEn:'Show English',hideEn:'Hide English',transing:'Translating...',expected:'Expected output',tip:'💡 Tip:',correct:'🎉 Correct!',wrong:'❌ Not quite right.',eval:'🤔 Evaluating...',courses:'Courses',back:'Back to Courses',progress:'Progress'},
+zh:{learn:'学习',practice:'练习',hint:'提示',hide:'隐藏',solutions:'答案',viewSol:'📖 查看解答',yourOut:'你的输出',bestPractice:'✨ 最佳实践：',review:'复习',run:'运行',reset:'重置',prev:'上一题',next:'下一题',nextT:'下一主题 →',startEx:'开始练习',overall:'总进度',topics:'主题',copy:'复制到编辑器',complete:'完成所有题目继续',ex:'练习',of:'/',ask:'随便问...',tutor:'AI 导师',think:'思考中...',fail:'连接失败，试试提示！',showEn:'显示英文',hideEn:'隐藏英文',transing:'翻译中...',expected:'期望输出',tip:'💡 改进建议：',correct:'🎉 正确！',wrong:'❌ 不太对。',eval:'🤔 评估中...',courses:'课程',back:'返回课程',progress:'进度'},
+es:{learn:'Aprender',practice:'Practicar',hint:'Pista',hide:'Ocultar',solutions:'Soluciones',viewSol:'📖 Ver solución',yourOut:'Tu salida',bestPractice:'✨ Mejor práctica:',review:'Revisar',run:'Ejecutar',reset:'Reiniciar',prev:'Anterior',next:'Siguiente',nextT:'Siguiente →',startEx:'Comenzar',overall:'Progreso',topics:'Temas',copy:'Copiar',complete:'Completa todo',ex:'Ejercicio',of:'de',ask:'Pregunta...',tutor:'Tutor IA',think:'Pensando...',fail:'Conexión fallida!',showEn:'Mostrar inglés',hideEn:'Ocultar inglés',transing:'Traduciendo...',expected:'Salida esperada',tip:'💡 Consejo:',correct:'🎉 ¡Correcto!',wrong:'❌ No del todo.',eval:'🤔 Evaluando...',courses:'Cursos',back:'Volver',progress:'Progreso'},
+fr:{learn:'Apprendre',practice:'Pratiquer',hint:'Indice',hide:'Cacher',solutions:'Solutions',viewSol:'📖 Voir la solution',yourOut:'Votre sortie',bestPractice:'✨ Meilleure pratique:',review:'Réviser',run:'Exécuter',reset:'Réinitialiser',prev:'Précédent',next:'Suivant',nextT:'Suivant →',startEx:'Commencer',overall:'Progrès',topics:'Sujets',copy:'Copier',complete:'Terminez tout',ex:'Exercice',of:'sur',ask:'Demandez...',tutor:'Tuteur IA',think:'Réflexion...',fail:'Échouée!',showEn:'Anglais',hideEn:'Cacher',transing:'Traduction...',expected:'Sortie attendue',tip:'💡 Conseil:',correct:'🎉 Correct!',wrong:'❌ Pas tout à fait.',eval:'🤔 Évaluation...',courses:'Cours',back:'Retour',progress:'Progrès'},
+ja:{learn:'学ぶ',practice:'練習',hint:'ヒント',hide:'非表示',solutions:'解答',viewSol:'📖 解答を見る',yourOut:'あなたの出力',bestPractice:'✨ ベストプラクティス:',review:'復習',run:'実行',reset:'リセット',prev:'前へ',next:'次へ',nextT:'次 →',startEx:'開始',overall:'進捗',topics:'トピック',copy:'コピー',complete:'全て完了して続行',ex:'練習',of:'/',ask:'聞いて...',tutor:'AIチューター',think:'考え中...',fail:'接続失敗！',showEn:'英語表示',hideEn:'英語非表示',transing:'翻訳中...',expected:'期待される出力',tip:'💡 ヒント:',correct:'🎉 正解！',wrong:'❌ 惜しい。',eval:'🤔 評価中...',courses:'コース',back:'戻る',progress:'進捗'},
+ko:{learn:'학습',practice:'연습',hint:'힌트',hide:'숨기기',solutions:'정답',viewSol:'📖 정답 보기',yourOut:'내 출력',bestPractice:'✨ 모범 사례:',review:'복습',run:'실행',reset:'초기화',prev:'이전',next:'다음',nextT:'다음 →',startEx:'시작',overall:'진행률',topics:'주제',copy:'복사',complete:'모두 완료하고 계속',ex:'연습',of:'/',ask:'질문...',tutor:'AI 튜터',think:'생각 중...',fail:'연결 실패!',showEn:'영어',hideEn:'숨기기',transing:'번역 중...',expected:'예상 출력',tip:'💡 팁:',correct:'🎉 정답!',wrong:'❌ 아쉽네요.',eval:'🤔 평가 중...',courses:'코스',back:'뒤로',progress:'진행률'},
+pt:{learn:'Aprender',practice:'Praticar',hint:'Dica',hide:'Ocultar',solutions:'Soluções',viewSol:'📖 Ver solução',yourOut:'Sua saída',bestPractice:'✨ Melhor prática:',review:'Revisar',run:'Executar',reset:'Reiniciar',prev:'Anterior',next:'Próximo',nextT:'Próximo →',startEx:'Iniciar',overall:'Progresso',topics:'Temas',copy:'Copiar',complete:'Complete tudo',ex:'Exercício',of:'de',ask:'Pergunte...',tutor:'Tutor IA',think:'Pensando...',fail:'Falhou!',showEn:'Inglês',hideEn:'Ocultar',transing:'Traduzindo...',expected:'Saída esperada',tip:'💡 Dica:',correct:'🎉 Correto!',wrong:'❌ Não.',eval:'🤔 Avaliando...',courses:'Cursos',back:'Voltar',progress:'Progresso'},
+de:{learn:'Lernen',practice:'Üben',hint:'Hinweis',hide:'Ausblenden',solutions:'Lösungen',viewSol:'📖 Lösung ansehen',yourOut:'Deine Ausgabe',bestPractice:'✨ Best Practice:',review:'Wiederholen',run:'Ausführen',reset:'Zurücksetzen',prev:'Zurück',next:'Weiter',nextT:'Nächstes →',startEx:'Starten',overall:'Fortschritt',topics:'Themen',copy:'Kopieren',complete:'Alles abschließen',ex:'Übung',of:'von',ask:'Frag...',tutor:'KI-Tutor',think:'Denke...',fail:'Fehlgeschlagen!',showEn:'Englisch',hideEn:'Ausblenden',transing:'Übersetze...',expected:'Erwartete Ausgabe',tip:'💡 Tipp:',correct:'🎉 Richtig!',wrong:'❌ Nicht ganz.',eval:'🤔 Auswertung...',courses:'Kurse',back:'Zurück',progress:'Fortschritt'}
+};
+
+
+// ═══════════════════════════════════════════════
+// ANIMATED DIAGRAM COMPONENTS
+// ═══════════════════════════════════════════════
+const Diagrams={
+'quant-overview':()=>{
+  const[step,setStep]=React.useState(0);
+  React.useEffect(()=>{const t=setInterval(()=>setStep(s=>(s+1)%5),2000);return()=>clearInterval(t)},[]);
+  const steps=[
+    {icon:'📊',label:'Data',desc:'Historical prices, volumes'},
+    {icon:'🧮',label:'Strategy',desc:'Rules & signals'},
+    {icon:'🤖',label:'Backtest',desc:'Simulate on past data'},
+    {icon:'✅',label:'Validate',desc:'Check profitability & risk'},
+    {icon:'🚀',label:'Execute',desc:'Automated trading'}
+  ];
+  return <div style={{background:'rgba(16,24,48,0.8)',borderRadius:12,padding:20,margin:'16px 0',border:'1px solid #1e3a5f'}}>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,flexWrap:'wrap'}}>
+      {steps.map((s,i)=><React.Fragment key={i}>
+        <div style={{textAlign:'center',padding:12,borderRadius:8,background:i===step?'rgba(16,185,129,0.2)':'transparent',border:i===step?'2px solid #10b981':'2px solid transparent',transition:'all 0.5s',minWidth:85}}>
+          <div style={{fontSize:26}}>{s.icon}</div>
+          <div style={{color:i===step?'#6ee7b7':'#94a3b8',fontSize:11,fontWeight:600,marginTop:4}}>{s.label}</div>
+          <div style={{color:'#64748b',fontSize:10}}>{s.desc}</div>
+        </div>
+        {i<4&&<div style={{color:i===step?'#10b981':'#1e3a5f',fontSize:16,transition:'color 0.5s'}}>→</div>}
+      </React.Fragment>)}
+    </div>
+    <p style={{textAlign:'center',color:'#94a3b8',fontSize:12,marginTop:12}}>Quantitative Trading = Data + Math + Code → Automated decisions</p>
+  </div>
+},
+
+'market-participants':()=>{
+  const ps=[
+    {icon:'🏦',name:'Institutions',desc:'Banks, hedge funds, pension funds',size:'70% of volume',c:'#60a5fa'},
+    {icon:'🤖',name:'Algo Traders',desc:'Automated computer strategies',size:'60-70% of trades',c:'#a78bfa'},
+    {icon:'👤',name:'Retail',desc:'Individual investors like you!',size:'25% of volume',c:'#34d399'},
+    {icon:'🏛️',name:'Market Makers',desc:'Provide liquidity, earn spread',size:'Always there',c:'#fbbf24'}
+  ];
+  return <div style={{background:'rgba(16,24,48,0.8)',borderRadius:12,padding:16,margin:'16px 0',border:'1px solid #1e3a5f'}}>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:10}}>
+      {ps.map((p,i)=><div key={i} style={{background:'#0a0f1e',borderRadius:8,padding:10,border:'1px solid #1e293b',textAlign:'center'}}>
+        <div style={{fontSize:24}}>{p.icon}</div>
+        <div style={{color:p.c,fontWeight:600,fontSize:13}}>{p.name}</div>
+        <div style={{color:'#94a3b8',fontSize:10,marginTop:4}}>{p.desc}</div>
+        <div style={{color:'#64748b',fontSize:9,marginTop:4,padding:'2px 6px',background:'rgba(30,41,59,0.5)',borderRadius:4,display:'inline-block'}}>{p.size}</div>
+      </div>)}
+    </div>
+  </div>
+},
+
+'candlestick-anatomy':()=>{
+  const[show,setShow]=React.useState('bull');
+  return <div style={{background:'rgba(16,24,48,0.8)',borderRadius:12,padding:20,margin:'16px 0',border:'1px solid #1e3a5f'}}>
+    <div style={{display:'flex',gap:8,justifyContent:'center',marginBottom:16}}>
+      {['bull','bear'].map(t=><button key={t} onClick={()=>setShow(t)} style={{padding:'4px 14px',borderRadius:6,fontSize:11,border:'none',cursor:'pointer',background:show===t?(t==='bull'?'#10b981':'#ef4444'):'#1e293b',color:show===t?'#fff':'#94a3b8',fontWeight:600}}>{t==='bull'?'📈 Bullish (涨)':'📉 Bearish (跌)'}</button>)}
+    </div>
+    <div style={{display:'flex',justifyContent:'center',alignItems:'center',gap:30}}>
+      <svg width="120" height="200" viewBox="0 0 120 200">
+        {show==='bull'?<>
+          <line x1="60" y1="20" x2="60" y2="60" stroke="#10b981" strokeWidth="2"/>
+          <rect x="30" y="60" width="60" height="80" fill="#10b981" rx="3"/>
+          <line x1="60" y1="140" x2="60" y2="180" stroke="#10b981" strokeWidth="2"/>
+          <text x="125" y="25" fill="#94a3b8" fontSize="10" textAnchor="start">← High (最高价)</text>
+          <text x="125" y="65" fill="#6ee7b7" fontSize="10" textAnchor="start">← Close (收盘价)</text>
+          <text x="125" y="145" fill="#6ee7b7" fontSize="10" textAnchor="start">← Open (开盘价)</text>
+          <text x="125" y="185" fill="#94a3b8" fontSize="10" textAnchor="start">← Low (最低价)</text>
+        </>:<>
+          <line x1="60" y1="20" x2="60" y2="60" stroke="#ef4444" strokeWidth="2"/>
+          <rect x="30" y="60" width="60" height="80" fill="#ef4444" rx="3"/>
+          <line x1="60" y1="140" x2="60" y2="180" stroke="#ef4444" strokeWidth="2"/>
+          <text x="125" y="25" fill="#94a3b8" fontSize="10" textAnchor="start">← High (最高价)</text>
+          <text x="125" y="65" fill="#fca5a5" fontSize="10" textAnchor="start">← Open (开盘价)</text>
+          <text x="125" y="145" fill="#fca5a5" fontSize="10" textAnchor="start">← Close (收盘价)</text>
+          <text x="125" y="185" fill="#94a3b8" fontSize="10" textAnchor="start">← Low (最低价)</text>
+        </>}
+      </svg>
+    </div>
+    <p style={{textAlign:'center',color:'#94a3b8',fontSize:11,marginTop:12}}>{show==='bull'?'Green/hollow = price went UP (close > open)':'Red/filled = price went DOWN (close < open)'}</p>
+  </div>
+},
+
+'return-calc':()=>{
+  const[price1]=React.useState(100);
+  const[price2,setPrice2]=React.useState(110);
+  const ret=((price2-price1)/price1*100).toFixed(2);
+  return <div style={{background:'rgba(16,24,48,0.8)',borderRadius:12,padding:20,margin:'16px 0',border:'1px solid #1e3a5f'}}>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:16,flexWrap:'wrap'}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{color:'#64748b',fontSize:10}}>Buy Price</div>
+        <div style={{color:'#e2e8f0',fontSize:20,fontFamily:'monospace'}}>$100</div>
+      </div>
+      <div style={{color:'#64748b',fontSize:20}}>→</div>
+      <div style={{textAlign:'center'}}>
+        <div style={{color:'#64748b',fontSize:10}}>Sell Price</div>
+        <input type="range" min="50" max="200" value={price2} onChange={e=>setPrice2(+e.target.value)} style={{width:120,accentColor:'#10b981'}}/>
+        <div style={{color:'#e2e8f0',fontSize:20,fontFamily:'monospace'}}>${price2}</div>
+      </div>
+      <div style={{color:'#64748b',fontSize:20}}>=</div>
+      <div style={{textAlign:'center'}}>
+        <div style={{color:'#64748b',fontSize:10}}>Return</div>
+        <div style={{color:ret>=0?'#10b981':'#ef4444',fontSize:24,fontWeight:700,fontFamily:'monospace'}}>{ret}%</div>
+      </div>
+    </div>
+    <div style={{textAlign:'center',marginTop:10,fontFamily:'monospace',fontSize:11,color:'#64748b'}}>
+      Return = (Sell - Buy) / Buy × 100 = ({price2} - 100) / 100 × 100
+    </div>
+  </div>
+},
+
+'risk-reward':()=>{
+  const[step,setStep]=React.useState(0);
+  React.useEffect(()=>{const t=setInterval(()=>setStep(s=>(s+1)%3),3000);return()=>clearInterval(t)},[]);
+  const items=[
+    {icon:'🏦',name:'Savings Account',ret:'2-5%',risk:'Very Low',c:'#60a5fa',bar:10},
+    {icon:'📈',name:'Stock Market',ret:'8-12%',risk:'Medium',c:'#fbbf24',bar:50},
+    {icon:'🤖',name:'Quant Trading',ret:'15-30%+',risk:'High',c:'#ef4444',bar:85}
+  ];
+  return <div style={{background:'rgba(16,24,48,0.8)',borderRadius:12,padding:16,margin:'16px 0',border:'1px solid #1e3a5f'}}>
+    <div style={{display:'flex',gap:10,justifyContent:'center',flexWrap:'wrap'}}>
+      {items.map((x,i)=><div key={i} style={{flex:'1 1 140px',maxWidth:180,padding:12,borderRadius:8,background:i===step?'rgba(16,24,48,1)':'rgba(10,15,30,0.5)',border:`2px solid ${i===step?x.c:'#1e293b'}`,transition:'all 0.5s',textAlign:'center'}}>
+        <div style={{fontSize:26}}>{x.icon}</div>
+        <div style={{color:x.c,fontSize:12,fontWeight:600}}>{x.name}</div>
+        <div style={{marginTop:6,background:'#0a0f1e',borderRadius:4,height:6,overflow:'hidden'}}>
+          <div style={{width:x.bar+'%',height:'100%',background:x.c,borderRadius:4,transition:'width 1s'}}/>
+        </div>
+        <div style={{display:'flex',justifyContent:'space-between',marginTop:4}}>
+          <span style={{color:'#6ee7b7',fontSize:10}}>Return: {x.ret}</span>
+          <span style={{color:'#fca5a5',fontSize:10}}>Risk: {x.risk}</span>
+        </div>
+      </div>)}
+    </div>
+    <p style={{textAlign:'center',color:'#94a3b8',fontSize:11,marginTop:10}}>Higher return = Higher risk. Always understand the risk before investing!</p>
+  </div>
+},
+
+'ma-crossover':()=>{
+  const[frame,setFrame]=React.useState(0);
+  React.useEffect(()=>{const t=setInterval(()=>setFrame(f=>(f+1)%60),150);return()=>clearInterval(t)},[]);
+  const prices=[];const sma5=[];const sma20=[];
+  for(let i=0;i<60;i++){prices.push(50+Math.sin(i*0.15)*15+Math.sin(i*0.05)*10+Math.random()*3)}
+  for(let i=0;i<60;i++){
+    if(i>=4){let s=0;for(let j=i-4;j<=i;j++)s+=prices[j];sma5.push(s/5)}else sma5.push(null);
+    if(i>=19){let s=0;for(let j=i-19;j<=i;j++)s+=prices[j];sma20.push(s/20)}else sma20.push(null);
+  }
+  const toY=v=>(85-v)*2+10;
+  const visible=Math.min(frame+20,60);
+  return <div style={{background:'rgba(16,24,48,0.8)',borderRadius:12,padding:16,margin:'16px 0',border:'1px solid #1e3a5f'}}>
+    <div style={{display:'flex',gap:16,justifyContent:'center',marginBottom:8,fontSize:11}}>
+      <span style={{color:'#94a3b8'}}>— Price</span>
+      <span style={{color:'#fbbf24'}}>— SMA(5) Fast</span>
+      <span style={{color:'#818cf8'}}>— SMA(20) Slow</span>
+    </div>
+    <svg width="100%" viewBox="0 0 400 160" preserveAspectRatio="xMidYMid meet">
+      <rect width="400" height="160" fill="transparent"/>
+      {/* Grid */}
+      {[30,50,70].map(v=><line key={v} x1="0" y1={toY(v)} x2="400" y2={toY(v)} stroke="#1e293b" strokeWidth="0.5"/>)}
+      {/* Price line */}
+      <polyline fill="none" stroke="#475569" strokeWidth="1.5" points={prices.slice(0,visible).map((p,i)=>`${i*6.8},${toY(p)}`).join(' ')}/>
+      {/* SMA 5 */}
+      <polyline fill="none" stroke="#fbbf24" strokeWidth="2" points={sma5.slice(0,visible).filter(v=>v!==null).map((p,i)=>`${(i+4)*6.8},${toY(p)}`).join(' ')}/>
+      {/* SMA 20 */}
+      <polyline fill="none" stroke="#818cf8" strokeWidth="2" points={sma20.slice(0,visible).filter(v=>v!==null).map((p,i)=>`${(i+19)*6.8},${toY(p)}`).join(' ')}/>
+      {/* Crossover signals */}
+      {sma5.slice(0,visible).map((v,i)=>{
+        if(i<20||!v||!sma20[i]||!sma5[i-1]||!sma20[i-1])return null;
+        if(sma5[i-1]<sma20[i-1]&&v>sma20[i])return <circle key={'b'+i} cx={i*6.8} cy={toY(v)} r="5" fill="#10b981" opacity="0.8"><title>BUY Signal</title></circle>;
+        if(sma5[i-1]>sma20[i-1]&&v<sma20[i])return <circle key={'s'+i} cx={i*6.8} cy={toY(v)} r="5" fill="#ef4444" opacity="0.8"><title>SELL Signal</title></circle>;
+        return null;
+      })}
+    </svg>
+    <div style={{display:'flex',justifyContent:'center',gap:16,marginTop:8}}>
+      <span style={{color:'#10b981',fontSize:11}}>🟢 Buy: Fast crosses ABOVE slow</span>
+      <span style={{color:'#ef4444',fontSize:11}}>🔴 Sell: Fast crosses BELOW slow</span>
+    </div>
+  </div>
+},
+
+'backtest-flow':()=>{
+  const[phase,setPhase]=React.useState(0);
+  React.useEffect(()=>{const t=setInterval(()=>setPhase(p=>(p+1)%4),2500);return()=>clearInterval(t)},[]);
+  const ph=[
+    {i:'📊',l:'Historical Data',d:'Load 5+ years of OHLCV data',c:'#60a5fa'},
+    {i:'🧮',l:'Apply Strategy',d:'Generate buy/sell signals',c:'#fbbf24'},
+    {i:'📈',l:'Simulate Trades',d:'Track P&L for each trade',c:'#10b981'},
+    {i:'📋',l:'Evaluate Results',d:'Sharpe, max drawdown, win rate',c:'#a78bfa'}
+  ];
+  return <div style={{background:'rgba(16,24,48,0.8)',borderRadius:12,padding:16,margin:'16px 0',border:'1px solid #1e3a5f'}}>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,flexWrap:'wrap'}}>
+      {ph.map((p,i)=><React.Fragment key={i}>
+        <div style={{textAlign:'center',padding:10,borderRadius:8,background:i===phase?'rgba(16,185,129,0.15)':'transparent',border:i===phase?'2px solid '+p.c:'2px solid transparent',transition:'all 0.5s',minWidth:85}}>
+          <div style={{fontSize:22}}>{p.i}</div>
+          <div style={{color:p.c,fontSize:10,fontWeight:600}}>{p.l}</div>
+          <div style={{color:'#64748b',fontSize:9}}>{p.d}</div>
+        </div>
+        {i<3&&<div style={{color:i===phase?'#10b981':'#1e3a5f',fontSize:14}}>→</div>}
+      </React.Fragment>)}
+    </div>
+  </div>
+},
+
+'sharpe-visual':()=>{
+  const strats=[
+    {name:'Strategy A',ret:15,vol:10,sharpe:1.5,c:'#10b981'},
+    {name:'Strategy B',ret:20,vol:25,sharpe:0.8,c:'#fbbf24'},
+    {name:'Strategy C',ret:8,vol:5,sharpe:1.6,c:'#60a5fa'},
+    {name:'S&P 500',ret:10,vol:15,sharpe:0.67,c:'#94a3b8'}
+  ];
+  return <div style={{background:'rgba(16,24,48,0.8)',borderRadius:12,padding:16,margin:'16px 0',border:'1px solid #1e3a5f'}}>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:8}}>
+      {strats.map((s,i)=><div key={i} style={{background:'#0a0f1e',borderRadius:8,padding:10,border:'1px solid #1e293b',textAlign:'center'}}>
+        <div style={{color:s.c,fontWeight:600,fontSize:12}}>{s.name}</div>
+        <div style={{marginTop:6,fontSize:10,color:'#6ee7b7'}}>Return: {s.ret}%</div>
+        <div style={{fontSize:10,color:'#fca5a5'}}>Volatility: {s.vol}%</div>
+        <div style={{marginTop:6,padding:'4px 8px',borderRadius:4,background:s.sharpe>1?'rgba(16,185,129,0.2)':'rgba(251,191,36,0.2)',color:s.sharpe>1?'#10b981':'#fbbf24',fontWeight:700,fontSize:14}}>
+          Sharpe: {s.sharpe.toFixed(2)}
+        </div>
+      </div>)}
+    </div>
+    <p style={{textAlign:'center',color:'#94a3b8',fontSize:11,marginTop:10}}>Sharpe Ratio = (Return - Risk-free Rate) / Volatility → Higher is better!</p>
+  </div>
+},
+
+'drawdown-visual':()=>{
+  const vals=[100,105,110,108,115,120,112,105,98,95,100,108,115,120,125,118,122,128,130,135];
+  let peak=vals[0];const dd=vals.map(v=>{peak=Math.max(peak,v);return((v-peak)/peak)*100});
+  const toY=v=>80-v*0.5;const ddY=d=>40-d*2;
+  return <div style={{background:'rgba(16,24,48,0.8)',borderRadius:12,padding:16,margin:'16px 0',border:'1px solid #1e3a5f'}}>
+    <svg width="100%" viewBox="0 0 380 120" preserveAspectRatio="xMidYMid meet">
+      <polyline fill="none" stroke="#10b981" strokeWidth="2" points={vals.map((v,i)=>`${i*19+10},${toY(v)}`).join(' ')}/>
+      {dd.map((d,i)=>d<0?<rect key={i} x={i*19+5} y={40} width="10" height={Math.abs(d)*2} fill="rgba(239,68,68,0.4)" rx="1"/>:null)}
+      <line x1="0" y1="40" x2="380" y2="40" stroke="#334155" strokeWidth="0.5" strokeDasharray="4"/>
+      <text x="5" y="12" fill="#10b981" fontSize="9">Portfolio Value</text>
+      <text x="5" y="52" fill="#ef4444" fontSize="9">Drawdown</text>
+    </svg>
+    <p style={{textAlign:'center',color:'#94a3b8',fontSize:11,marginTop:6}}>Max Drawdown = largest peak-to-trough decline. Keep it small!</p>
+  </div>
+},
+
+'position-sizing':()=>{
+  const[risk,setRisk]=React.useState(2);
+  const capital=100000;
+  const stopLoss=5;
+  const posSize=(capital*risk/100)/(stopLoss/100);
+  return <div style={{background:'rgba(16,24,48,0.8)',borderRadius:12,padding:16,margin:'16px 0',border:'1px solid #1e3a5f'}}>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:20,flexWrap:'wrap'}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{color:'#64748b',fontSize:10}}>Capital</div>
+        <div style={{color:'#e2e8f0',fontSize:16,fontFamily:'monospace'}}>$100,000</div>
+      </div>
+      <div style={{textAlign:'center'}}>
+        <div style={{color:'#64748b',fontSize:10}}>Risk per trade</div>
+        <input type="range" min="0.5" max="5" step="0.5" value={risk} onChange={e=>setRisk(+e.target.value)} style={{width:80,accentColor:'#ef4444'}}/>
+        <div style={{color:'#fca5a5',fontSize:16,fontWeight:700}}>{risk}%</div>
+      </div>
+      <div style={{textAlign:'center'}}>
+        <div style={{color:'#64748b',fontSize:10}}>Stop Loss</div>
+        <div style={{color:'#fbbf24',fontSize:16}}>5%</div>
+      </div>
+      <div style={{color:'#334155',fontSize:20}}>=</div>
+      <div style={{textAlign:'center'}}>
+        <div style={{color:'#64748b',fontSize:10}}>Position Size</div>
+        <div style={{color:'#10b981',fontSize:20,fontWeight:700}}>${posSize.toLocaleString()}</div>
+      </div>
+    </div>
+    <div style={{textAlign:'center',marginTop:8,fontFamily:'monospace',fontSize:10,color:'#64748b'}}>
+      Position = (Capital × Risk%) / Stop% = ($100K × {risk}%) / 5%
+    </div>
+  </div>
+},
+
+'strategy-types':()=>{
+  const strats=[
+    {name:'Trend Following',icon:'📈',desc:'Follow the trend: buy when up, sell when down',ex:'Moving Average Crossover',c:'#10b981'},
+    {name:'Mean Reversion',icon:'🔄',desc:'Prices return to average: buy low, sell high',ex:'Bollinger Bands',c:'#60a5fa'},
+    {name:'Momentum',icon:'🚀',desc:'Strong moves continue: buy winners',ex:'RSI Breakout',c:'#fbbf24'},
+    {name:'Statistical Arb',icon:'📊',desc:'Price relationships between assets',ex:'Pairs Trading',c:'#a78bfa'}
+  ];
+  return <div style={{background:'rgba(16,24,48,0.8)',borderRadius:12,padding:12,margin:'16px 0',border:'1px solid #1e3a5f'}}>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:8}}>
+      {strats.map((s,i)=><div key={i} style={{background:'#0a0f1e',borderRadius:8,padding:10,border:'1px solid #1e293b'}}>
+        <div style={{fontSize:22}}>{s.icon}</div>
+        <div style={{color:s.c,fontWeight:600,fontSize:12}}>{s.name}</div>
+        <div style={{color:'#94a3b8',fontSize:10,marginTop:4}}>{s.desc}</div>
+        <div style={{color:'#64748b',fontSize:9,marginTop:4,fontStyle:'italic'}}>e.g. {s.ex}</div>
+      </div>)}
+    </div>
+  </div>
+},
+
+'ohlcv-table':()=>{
+  const rows=[
+    {d:'2024-01-15',o:150.20,h:153.80,l:149.50,c:152.30,v:'45.2M'},
+    {d:'2024-01-16',o:152.30,h:155.00,l:151.80,c:154.70,v:'38.1M'},
+    {d:'2024-01-17',o:154.70,h:154.90,l:148.20,c:149.10,v:'62.5M'},
+  ];
+  return <div style={{background:'rgba(16,24,48,0.8)',borderRadius:12,padding:12,margin:'16px 0',border:'1px solid #1e3a5f',overflow:'auto'}}>
+    <table style={{width:'100%',borderCollapse:'collapse',fontSize:11,fontFamily:'monospace'}}>
+      <thead><tr>{['Date','Open','High','Low','Close','Volume'].map((h,i)=><th key={i} style={{padding:'6px 10px',color:'#94a3b8',borderBottom:'1px solid #1e293b',textAlign:i?'right':'left',fontSize:10}}>{h}</th>)}</tr></thead>
+      <tbody>{rows.map((r,i)=><tr key={i}>{[r.d,r.o.toFixed(2),r.h.toFixed(2),r.l.toFixed(2),r.c.toFixed(2),r.v].map((v,j)=><td key={j} style={{padding:'6px 10px',color:j===0?'#60a5fa':j===4?(r.c>r.o?'#10b981':'#ef4444'):'#e2e8f0',borderBottom:'1px solid #0a0f1e',textAlign:j?'right':'left'}}>{j>0&&j<5?'$':''}{v}</td>)}</tr>)}</tbody>
+    </table>
+    <p style={{textAlign:'center',color:'#94a3b8',fontSize:10,marginTop:8}}>OHLCV = Open, High, Low, Close, Volume — the fundamental data for all trading analysis</p>
+  </div>
+},
+
+'yfinance-demo':()=>{
+  return <div style={{background:'rgba(16,24,48,0.8)',borderRadius:12,padding:16,margin:'16px 0',border:'1px solid #1e3a5f'}}>
+    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}><span style={{fontSize:16}}>🐍</span><span style={{color:'#10b981',fontWeight:600,fontSize:13}}>yfinance Quick Start</span></div>
+    <div style={{fontFamily:'monospace',fontSize:11,color:'#94a3b8',lineHeight:1.7}}>
+      <div><span style={{color:'#c084fc'}}>import</span> yfinance <span style={{color:'#c084fc'}}>as</span> yf</div>
+      <div style={{marginTop:6}}><span style={{color:'#64748b'}}># Download stock data</span></div>
+      <div>stock = yf.Ticker(<span style={{color:'#34d399'}}>"AAPL"</span>)</div>
+      <div>df = stock.history(period=<span style={{color:'#34d399'}}>"1y"</span>)</div>
+      <div style={{marginTop:6}}><span style={{color:'#64748b'}}># Get price columns</span></div>
+      <div>print(df[[<span style={{color:'#34d399'}}>'Open'</span>, <span style={{color:'#34d399'}}>'High'</span>, <span style={{color:'#34d399'}}>'Low'</span>, <span style={{color:'#34d399'}}>'Close'</span>, <span style={{color:'#34d399'}}>'Volume'</span>]])</div>
+    </div>
+  </div>
+},
+
+'indicator-comparison':()=>{
+  const inds=[
+    {name:'SMA',full:'Simple Moving Average',use:'Trend direction',calc:'Average of last N prices',c:'#fbbf24'},
+    {name:'EMA',full:'Exponential Moving Average',use:'Recent trend (faster)',calc:'Weighted average (recent = more weight)',c:'#10b981'},
+    {name:'RSI',full:'Relative Strength Index',use:'Overbought / Oversold',calc:'0-100 scale from gain/loss ratio',c:'#a78bfa'},
+    {name:'MACD',full:'Moving Avg Convergence/Div',use:'Trend changes',calc:'Difference between 2 EMAs',c:'#60a5fa'},
+    {name:'BB',full:'Bollinger Bands',use:'Volatility & reversal',calc:'SMA ± 2 × std deviation',c:'#f87171'}
+  ];
+  return <div style={{background:'rgba(16,24,48,0.8)',borderRadius:12,padding:12,margin:'16px 0',border:'1px solid #1e3a5f'}}>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:6}}>
+      {inds.map((ind,i)=><div key={i} style={{background:'#0a0f1e',borderRadius:6,padding:8,border:'1px solid #1e293b'}}>
+        <div style={{color:ind.c,fontWeight:700,fontSize:14}}>{ind.name}</div>
+        <div style={{color:'#64748b',fontSize:9}}>{ind.full}</div>
+        <div style={{color:'#6ee7b7',fontSize:10,marginTop:4}}>📌 {ind.use}</div>
+        <div style={{color:'#94a3b8',fontSize:9,marginTop:2}}>🧮 {ind.calc}</div>
+      </div>)}
+    </div>
+  </div>
+},
+
+'emh-levels':()=>{
+  const[hl,setHl]=React.useState(0);
+  const levels=[{name:'Weak Form',desc:'Past prices already reflected. Technical analysis alone cannot beat the market.',color:'#10b981',icon:'📊'},{name:'Semi-Strong',desc:'All public info (news, earnings) reflected. Fundamental analysis cannot consistently win.',color:'#fbbf24',icon:'📰'},{name:'Strong Form',desc:'ALL info including insider knowledge reflected. Nobody can consistently beat the market.',color:'#f87171',icon:'🔒'}];
+  React.useEffect(()=>{const t=setInterval(()=>setHl(h=>(h+1)%3),3000);return()=>clearInterval(t)},[]);
+  return <div style={{background:'rgba(30,41,59,0.8)',borderRadius:12,padding:16,margin:'16px 0',border:'1px solid #334155'}}>
+    <div style={{textAlign:'center',color:'#94a3b8',fontSize:12,marginBottom:12}}>Efficient Market Hypothesis — Burton Malkiel / Eugene Fama</div>
+    <div style={{display:'flex',gap:8,justifyContent:'center',flexWrap:'wrap'}}>
+      {levels.map((l,i)=><div key={i} onClick={()=>setHl(i)} style={{padding:12,borderRadius:8,border:hl===i?`2px solid ${l.color}`:'1px solid #334155',background:hl===i?l.color+'15':'transparent',cursor:'pointer',minWidth:140,flex:1,textAlign:'center',transition:'all 0.3s'}}>
+        <div style={{fontSize:24}}>{l.icon}</div>
+        <div style={{color:l.color,fontWeight:600,fontSize:12,marginTop:4}}>{l.name}</div>
+        <div style={{color:'#94a3b8',fontSize:10,marginTop:4,lineHeight:1.4}}>{l.desc}</div>
+      </div>)}
+    </div>
+    <p style={{textAlign:'center',color:'#64748b',fontSize:10,marginTop:8}}>From "A Random Walk Down Wall Street" — but quants find edges in market inefficiencies!</p>
+  </div>
+},
+'behavioral-biases':()=>{
+  const biases=[{name:'Loss Aversion',desc:'Losses hurt 2× more than equivalent gains feel good',icon:'😰',color:'#f87171'},{name:'Overconfidence',desc:'We overestimate our skill and underestimate risk',icon:'😎',color:'#fbbf24'},{name:'Herd Mentality',desc:'Following crowds instead of data-driven analysis',icon:'🐑',color:'#a78bfa'},{name:'Anchoring',desc:'Fixating on irrelevant reference points (e.g. buy price)',icon:'⚓',color:'#60a5fa'},{name:'Recency Bias',desc:'Overweighting recent events, ignoring long-term data',icon:'🕐',color:'#10b981'},{name:'Sunk Cost',desc:'Holding losers because "I already invested so much"',icon:'💸',color:'#f472b6'}];
+  return <div style={{background:'rgba(30,41,59,0.8)',borderRadius:12,padding:12,margin:'16px 0',border:'1px solid #334155'}}>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:6}}>
+      {biases.map((b,i)=><div key={i} style={{background:'#0f172a',borderRadius:6,padding:8,textAlign:'center',border:'1px solid #1e293b'}}>
+        <div style={{fontSize:20}}>{b.icon}</div>
+        <div style={{color:b.color,fontWeight:600,fontSize:11}}>{b.name}</div>
+        <div style={{color:'#64748b',fontSize:9,marginTop:2}}>{b.desc}</div>
+      </div>)}
+    </div>
+    <p style={{textAlign:'center',color:'#94a3b8',fontSize:11,marginTop:8}}>Quant trading removes these biases — algorithms don't feel emotions!</p>
+  </div>
+},
+'normal-dist':()=>{
+  const pts=Array.from({length:41},(_,i)=>{const x=(i-20)/5;return{x:i*8,y:180-Math.exp(-x*x/2)*160}});
+  return <div style={{background:'rgba(30,41,59,0.8)',borderRadius:12,padding:16,margin:'16px 0',border:'1px solid #334155'}}>
+    <svg width="100%" viewBox="0 0 340 200" style={{maxWidth:340,display:'block',margin:'0 auto'}}>
+      <path d={pts.map((p,i)=>`${i?'L':'M'}${p.x+10} ${p.y}`).join(' ')} stroke="#10b981" fill="none" strokeWidth="2"/>
+      <line x1="10" y1="180" x2="330" y2="180" stroke="#334155" strokeWidth="1"/>
+      <line x1="170" y1="20" x2="170" y2="180" stroke="#fbbf24" strokeWidth="1" strokeDasharray="4"/>
+      <text x="170" y="195" fill="#fbbf24" fontSize="10" textAnchor="middle">μ (mean)</text>
+      <text x="105" y="195" fill="#64748b" fontSize="9" textAnchor="middle">-1σ</text>
+      <text x="235" y="195" fill="#64748b" fontSize="9" textAnchor="middle">+1σ</text>
+      <rect x="105" y="50" width="130" height="130" fill="#10b981" opacity="0.08" rx="4"/>
+      <text x="170" y="100" fill="#10b981" fontSize="11" textAnchor="middle">68.2%</text>
+    </svg>
+    <p style={{textAlign:'center',color:'#94a3b8',fontSize:11,marginTop:4}}>Normal Distribution — 68% within 1σ, 95% within 2σ. But financial returns have "fat tails"!</p>
+  </div>
+},
+'mean-reversion-visual':()=>{
+  const[t,setT]=React.useState(0);
+  React.useEffect(()=>{const i=setInterval(()=>setT(t=>(t+1)%100),80);return()=>clearInterval(i)},[]);
+  const pts=Array.from({length:50},(_,i)=>{const v=Math.sin(i*0.15)*30+Math.sin(i*0.4)*15;return{x:i*6+20,y:100+v+Math.sin((i+t)*0.1)*5}});
+  return <div style={{background:'rgba(30,41,59,0.8)',borderRadius:12,padding:16,margin:'16px 0',border:'1px solid #334155'}}>
+    <svg width="100%" viewBox="0 0 340 200" style={{maxWidth:340,display:'block',margin:'0 auto'}}>
+      <line x1="20" y1="100" x2="320" y2="100" stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="6"/>
+      <text x="325" y="104" fill="#fbbf24" fontSize="9">Mean</text>
+      <path d={pts.map((p,i)=>`${i?'L':'M'}${p.x} ${p.y}`).join(' ')} stroke="#10b981" fill="none" strokeWidth="2"/>
+      {pts.filter((_,i)=>i%8===0).map((p,i)=><line key={i} x1={p.x} y1={p.y} x2={p.x} y2={100} stroke={p.y<100?'#f87171':'#60a5fa'} strokeWidth="1" opacity="0.4"/>)}
+      <text x="170" y="50" fill="#f87171" fontSize="10" textAnchor="middle">↓ SELL when above mean</text>
+      <text x="170" y="170" fill="#60a5fa" fontSize="10" textAnchor="middle">↑ BUY when below mean</text>
+    </svg>
+    <p style={{textAlign:'center',color:'#94a3b8',fontSize:11,marginTop:4}}>Mean Reversion (Ernest Chan) — prices tend to return to their historical average</p>
+  </div>
+},
+'momentum-visual':()=>{
+  const[t,setT]=React.useState(0);
+  React.useEffect(()=>{const i=setInterval(()=>setT(p=>(p+1)%60),100);return()=>clearInterval(i)},[]);
+  return <div style={{background:'rgba(30,41,59,0.8)',borderRadius:12,padding:16,margin:'16px 0',border:'1px solid #334155'}}>
+    <svg width="100%" viewBox="0 0 340 160" style={{maxWidth:340,display:'block',margin:'0 auto'}}>
+      <path d="M20 130 Q80 120 120 85 Q160 50 220 35 L320 15" stroke="#10b981" fill="none" strokeWidth="2.5"/>
+      <path d="M20 30 Q80 40 120 75 Q160 110 220 125 L320 145" stroke="#f87171" fill="none" strokeWidth="2.5"/>
+      <circle cx={Math.min(20+t*5,320)} cy={Math.max(130-t*1.9,15)} r="4" fill="#10b981"/>
+      <circle cx={Math.min(20+t*5,320)} cy={Math.min(30+t*1.9,145)} r="4" fill="#f87171"/>
+      <text x="280" y="12" fill="#10b981" fontSize="10">📈 Winners keep winning</text>
+      <text x="280" y="155" fill="#f87171" fontSize="10">📉 Losers keep losing</text>
+    </svg>
+    <p style={{textAlign:'center',color:'#94a3b8',fontSize:11,marginTop:4}}>Momentum — "trend is your friend" — buy winners, sell losers</p>
+  </div>
+},
+'bollinger-visual':()=>{
+  const[t,setT]=React.useState(0);
+  React.useEffect(()=>{const i=setInterval(()=>setT(p=>(p+1)%80),100);return()=>clearInterval(i)},[]);
+  const pts=Array.from({length:40},(_,i)=>{const price=100+Math.sin(i*0.2)*20+Math.sin(i*0.5)*10+Math.sin((i+t)*0.1)*3;const mean=100+Math.sin(i*0.2)*15;return{x:i*8+10,price,mean,upper:mean+25,lower:mean-25}});
+  return <div style={{background:'rgba(30,41,59,0.8)',borderRadius:12,padding:16,margin:'16px 0',border:'1px solid #334155'}}>
+    <svg width="100%" viewBox="0 0 340 200" style={{maxWidth:340,display:'block',margin:'0 auto'}}>
+      <path d={pts.map((p,i)=>`${i?'L':'M'}${p.x} ${200-p.upper}`).join(' ')} stroke="#f8717140" fill="none" strokeWidth="1" strokeDasharray="4"/>
+      <path d={pts.map((p,i)=>`${i?'L':'M'}${p.x} ${200-p.mean}`).join(' ')} stroke="#fbbf24" fill="none" strokeWidth="1.5"/>
+      <path d={pts.map((p,i)=>`${i?'L':'M'}${p.x} ${200-p.lower}`).join(' ')} stroke="#60a5fa40" fill="none" strokeWidth="1" strokeDasharray="4"/>
+      <path d={pts.map((p,i)=>`${i?'L':'M'}${p.x} ${200-p.price}`).join(' ')} stroke="#10b981" fill="none" strokeWidth="2"/>
+      <text x="310" y={200-pts[39].upper-5} fill="#f87171" fontSize="9">Upper</text>
+      <text x="310" y={200-pts[39].mean} fill="#fbbf24" fontSize="9">SMA</text>
+      <text x="310" y={200-pts[39].lower+12} fill="#60a5fa" fontSize="9">Lower</text>
+    </svg>
+    <p style={{textAlign:'center',color:'#94a3b8',fontSize:11,marginTop:4}}>Bollinger Bands — SMA ± 2σ. Price touching bands = potential reversal signal</p>
+  </div>
+},
+'option-payoff':()=>{
+  const[type,setType]=React.useState('call');
+  const strike=100;
+  const pts=Array.from({length:41},(_,i)=>{const s=80+i;const callPay=Math.max(s-strike,0)-5;const putPay=Math.max(strike-s,0)-5;return{x:i*8+10,y:type==='call'?100-callPay*3:100-putPay*3,pay:type==='call'?callPay:putPay}});
+  return <div style={{background:'rgba(30,41,59,0.8)',borderRadius:12,padding:16,margin:'16px 0',border:'1px solid #334155'}}>
+    <div style={{display:'flex',gap:6,justifyContent:'center',marginBottom:10}}>
+      {['call','put'].map(t=><button key={t} onClick={()=>setType(t)} style={{padding:'4px 14px',borderRadius:6,fontSize:11,border:'none',cursor:'pointer',background:type===t?'#10b981':'#1e293b',color:type===t?'#000':'#94a3b8',fontWeight:type===t?600:400,textTransform:'uppercase'}}>{t==='call'?'📈 Call Option':'📉 Put Option'}</button>)}
+    </div>
+    <svg width="100%" viewBox="0 0 340 200" style={{maxWidth:340,display:'block',margin:'0 auto'}}>
+      <line x1="10" y1="115" x2="340" y2="115" stroke="#334155" strokeWidth="1"/>
+      <line x1="170" y1="30" x2="170" y2="180" stroke="#fbbf2440" strokeWidth="1" strokeDasharray="4"/>
+      <text x="172" y="190" fill="#fbbf24" fontSize="9">Strike=$100</text>
+      <path d={pts.map((p,i)=>`${i?'L':'M'}${p.x} ${p.y}`).join(' ')} stroke={type==='call'?'#10b981':'#f87171'} fill="none" strokeWidth="2.5"/>
+      <text x="280" y="45" fill="#10b981" fontSize="10">Profit ↑</text>
+      <text x="280" y="170" fill="#f87171" fontSize="10">Loss ↓</text>
+    </svg>
+    <p style={{textAlign:'center',color:'#94a3b8',fontSize:11,marginTop:4}}>{type==='call'?'Call: right to BUY at strike. Profit when price > strike + premium':'Put: right to SELL at strike. Profit when price < strike - premium'}</p>
+  </div>
+},
+'greeks-table':()=>{
+  const greeks=[{name:'Delta (Δ)',desc:'Price sensitivity — how much option price changes per $1 stock move',range:'0 to 1 (call) / -1 to 0 (put)',color:'#10b981'},{name:'Gamma (Γ)',desc:'Acceleration — rate of change of Delta',range:'Highest at-the-money',color:'#fbbf24'},{name:'Theta (Θ)',desc:'Time decay — how much value lost per day',range:'Always negative for buyers',color:'#f87171'},{name:'Vega (ν)',desc:'Volatility sensitivity — change per 1% vol move',range:'Highest at-the-money',color:'#a78bfa'},{name:'Rho (ρ)',desc:'Interest rate sensitivity — usually small effect',range:'Positive for calls, negative for puts',color:'#60a5fa'}];
+  return <div style={{background:'rgba(30,41,59,0.8)',borderRadius:12,padding:12,margin:'16px 0',border:'1px solid #334155'}}>
+    {greeks.map((g,i)=><div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'6px 0',borderBottom:i<4?'1px solid #1e293b':'none'}}>
+      <span style={{color:g.color,fontWeight:700,fontSize:13,minWidth:80,fontFamily:'monospace'}}>{g.name}</span>
+      <span style={{color:'#cbd5e1',fontSize:12,flex:1}}>{g.desc}</span>
+      <span style={{color:'#64748b',fontSize:10,minWidth:100,textAlign:'right'}}>{g.range}</span>
+    </div>)}
+  </div>
+},
+'order-book':()=>{
+  const[t,setT]=React.useState(0);
+  React.useEffect(()=>{const i=setInterval(()=>setT(p=>(p+1)%20),500);return()=>clearInterval(i)},[]);
+  const bids=[{p:99.95,q:500+t*20},{p:99.90,q:1200},{p:99.85,q:800+t*10},{p:99.80,q:2000}];
+  const asks=[{p:100.00,q:300+t*15},{p:100.05,q:900},{p:100.10,q:600+t*10},{p:100.15,q:1500}];
+  return <div style={{background:'rgba(30,41,59,0.8)',borderRadius:12,padding:16,margin:'16px 0',border:'1px solid #334155'}}>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,maxWidth:380,margin:'0 auto'}}>
+      <div><div style={{color:'#10b981',fontWeight:600,fontSize:12,marginBottom:6,textAlign:'center'}}>📗 Bids (Buy Orders)</div>
+        {bids.map((b,i)=><div key={i} style={{display:'flex',justifyContent:'space-between',padding:'3px 8px',borderRadius:4,background:`rgba(16,185,129,${0.05+i*0.03})`,marginBottom:2}}><span style={{color:'#10b981',fontSize:12,fontFamily:'monospace'}}>${b.p.toFixed(2)}</span><span style={{color:'#64748b',fontSize:11}}>{b.q}</span></div>)}
+      </div>
+      <div><div style={{color:'#f87171',fontWeight:600,fontSize:12,marginBottom:6,textAlign:'center'}}>📕 Asks (Sell Orders)</div>
+        {asks.map((a,i)=><div key={i} style={{display:'flex',justifyContent:'space-between',padding:'3px 8px',borderRadius:4,background:`rgba(248,113,113,${0.05+i*0.03})`,marginBottom:2}}><span style={{color:'#f87171',fontSize:12,fontFamily:'monospace'}}>${a.p.toFixed(2)}</span><span style={{color:'#64748b',fontSize:11}}>{a.q}</span></div>)}
+      </div>
+    </div>
+    <div style={{textAlign:'center',marginTop:8}}>
+      <span style={{color:'#fbbf24',fontSize:12,fontWeight:600}}>Spread: ${(asks[0].p-bids[0].p).toFixed(2)}</span>
+      <span style={{color:'#64748b',fontSize:10,marginLeft:8}}>Mid: ${((asks[0].p+bids[0].p)/2).toFixed(3)}</span>
+    </div>
+  </div>
+},
+'kelly-criterion':()=>{
+  const[winRate,setWinRate]=React.useState(55);
+  const[winLoss,setWinLoss]=React.useState(1.5);
+  const p=winRate/100;const q=1-p;
+  const kelly=Math.max(0,p-(q/(winLoss)));
+  return <div style={{background:'rgba(30,41,59,0.8)',borderRadius:12,padding:16,margin:'16px 0',border:'1px solid #334155'}}>
+    <div style={{display:'flex',gap:16,justifyContent:'center',flexWrap:'wrap',marginBottom:12}}>
+      <div><label style={{color:'#94a3b8',fontSize:11}}>Win Rate: {winRate}%</label><br/><input type="range" min="30" max="80" value={winRate} onChange={e=>setWinRate(+e.target.value)} style={{width:120}}/></div>
+      <div><label style={{color:'#94a3b8',fontSize:11}}>Win/Loss Ratio: {winLoss}x</label><br/><input type="range" min="0.5" max="3" step="0.1" value={winLoss} onChange={e=>setWinLoss(+e.target.value)} style={{width:120}}/></div>
+    </div>
+    <div style={{textAlign:'center'}}>
+      <div style={{fontSize:28,fontWeight:800,color:kelly>0?'#10b981':'#f87171'}}>{(kelly*100).toFixed(1)}%</div>
+      <div style={{color:'#94a3b8',fontSize:12}}>Kelly Optimal Fraction = p - q/R = {p.toFixed(2)} - {q.toFixed(2)}/{winLoss}</div>
+      <div style={{color:'#64748b',fontSize:10,marginTop:4}}>Practical rule: use Half-Kelly ({(kelly*50).toFixed(1)}%) for safety</div>
+    </div>
+  </div>
+},
+'ml-pipeline':()=>{
+  const[step,setStep]=React.useState(0);
+  React.useEffect(()=>{const t=setInterval(()=>setStep(s=>(s+1)%5),2000);return()=>clearInterval(t)},[]);
+  const steps=[{icon:'📊',label:'Raw Data',desc:'OHLCV, fundamentals, alt data',c:'#60a5fa'},{icon:'🔧',label:'Feature Engineering',desc:'Returns, indicators, lags, labels',c:'#a78bfa'},{icon:'🧠',label:'Model Training',desc:'Random Forest, XGBoost, LSTM',c:'#f87171'},{icon:'🧪',label:'Walk-Forward Test',desc:'Time-series cross-validation',c:'#fbbf24'},{icon:'📈',label:'Live Trading',desc:'Paper trade → real capital',c:'#10b981'}];
+  return <div style={{background:'rgba(30,41,59,0.8)',borderRadius:12,padding:16,margin:'16px 0',border:'1px solid #334155'}}>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,flexWrap:'wrap'}}>
+      {steps.map((s,i)=><React.Fragment key={i}>
+        <div style={{textAlign:'center',padding:10,borderRadius:8,background:i===step?s.c+'20':'transparent',border:i===step?`2px solid ${s.c}`:'2px solid transparent',transition:'all 0.5s',minWidth:75}}>
+          <div style={{fontSize:22}}>{s.icon}</div>
+          <div style={{color:s.c,fontSize:10,fontWeight:600}}>{s.label}</div>
+          <div style={{color:'#64748b',fontSize:8}}>{s.desc}</div>
+        </div>
+        {i<4&&<div style={{color:i===step?s.c:'#334155',fontSize:14}}>→</div>}
+      </React.Fragment>)}
+    </div>
+    <p style={{textAlign:'center',color:'#94a3b8',fontSize:11,marginTop:8}}>ML Trading Pipeline (Lopez de Prado) — never use standard k-fold CV on time series!</p>
+  </div>
+},
+'strategy-types':()=>{
+  const types=[
+    {name:'Trend Following',desc:'Buy uptrends, sell downtrends. "The trend is your friend."',tools:'SMA crossover, breakout, channel',book:'Systematic Trading',icon:'📈',color:'#10b981'},
+    {name:'Mean Reversion',desc:'Buy when cheap, sell when expensive. Prices return to average.',tools:'Bollinger Bands, RSI, z-score',book:'Algorithmic Trading',icon:'🔄',color:'#60a5fa'},
+    {name:'Momentum',desc:'Buy recent winners, sell recent losers. Past returns predict future.',tools:'12-1 month return, relative strength',book:'Random Walk',icon:'🚀',color:'#fbbf24'},
+    {name:'Statistical Arb',desc:'Exploit pricing relationships between correlated assets.',tools:'Pairs trading, cointegration',book:'Algorithmic Trading',icon:'⚖️',color:'#a78bfa'}
+  ];
+  return <div style={{background:'rgba(30,41,59,0.8)',borderRadius:12,padding:12,margin:'16px 0',border:'1px solid #334155'}}>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:8}}>
+      {types.map((t,i)=><div key={i} style={{background:'#0f172a',borderRadius:8,padding:10,border:'1px solid #1e293b'}}>
+        <div style={{fontSize:20,marginBottom:4}}>{t.icon}</div>
+        <div style={{color:t.color,fontWeight:600,fontSize:12}}>{t.name}</div>
+        <div style={{color:'#94a3b8',fontSize:10,marginTop:2,lineHeight:1.4}}>{t.desc}</div>
+        <div style={{color:'#64748b',fontSize:9,marginTop:4}}>📚 {t.book}</div>
+        <div style={{color:'#475569',fontSize:9}}>🔧 {t.tools}</div>
+      </div>)}
+    </div>
+  </div>
+},
+
+};
+const DiagramSummary=({items})=><div style={{background:'linear-gradient(135deg,rgba(16,185,129,0.1),rgba(96,165,250,0.1))',borderRadius:12,padding:16,margin:'16px 0',border:'1px solid rgba(16,185,129,0.3)'}}>
+  <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}><span style={{fontSize:16}}>📋</span><span style={{color:'#6ee7b7',fontWeight:600,fontSize:14}}>Summary</span></div>
+  {items.map((it,i)=><div key={i} style={{display:'flex',alignItems:'flex-start',gap:8,marginBottom:5}}><span style={{color:'#10b981',flexShrink:0}}>✓</span><span style={{color:'#cbd5e1',fontSize:13}}>{it}</span></div>)}
+</div>;
+
+// ═══════════════════════════════════════════════
+// COURSE DATA
+// ═══════════════════════════════════════════════
+
+
+const PRE_T={
+"c:0:title":{"zh":"金融市场基础","es":"Fundamentos de Mercados","fr":"Fondamentaux des Marchés","ja":"金融市場の基礎","ko":"금융시장 기초","pt":"Fundamentos de Mercados","de":"Finanzmarkt-Grundlagen"},
+"c:0:desc":{"zh":"从零理解市场运作、资产类型、收益与风险 — 随机漫步理论与行为金融学入门。","es":"Entiende mercados, activos, rendimientos y riesgos — desde la teoría del paseo aleatorio.","fr":"Comprendre les marchés, actifs, rendements et risques — de la marche aléatoire.","ja":"市場、資産、リターン、リスクを理解する — ランダムウォーク理論から。","ko":"시장, 자산, 수익률, 리스크를 이해합니다 — 랜덤워크 이론부터.","pt":"Entenda mercados, ativos, retornos e riscos — da teoria do passeio aleatório.","de":"Verstehe Märkte, Anlagen, Renditen und Risiken — Random Walk Theorie."},
+"c:1:title":{"zh":"Python 金融编程","es":"Python para Finanzas","fr":"Python pour la Finance","ja":"Python金融プログラミング","ko":"Python 금융 프로그래밍","pt":"Python para Finanças","de":"Python für Finanzen"},
+"c:1:desc":{"zh":"用 yfinance、pandas、NumPy、matplotlib 构建量化分析师的核心工具箱。","es":"Construye tu caja de herramientas quant con yfinance, pandas, NumPy y matplotlib.","fr":"Construisez votre boîte à outils quant avec yfinance, pandas, NumPy et matplotlib.","ja":"yfinance、pandas、NumPy、matplotlibでクオンツのツールボックスを構築。","ko":"yfinance, pandas, NumPy, matplotlib로 퀀트 도구를 구축합니다.","pt":"Construa seu kit quant com yfinance, pandas, NumPy e matplotlib.","de":"Baue dein Quant-Toolkit mit yfinance, pandas, NumPy und matplotlib."},
+"c:2:title":{"zh":"统计学基础","es":"Fundamentos Estadísticos","fr":"Fondements Statistiques","ja":"統計学の基礎","ko":"통계학 기초","pt":"Fundamentos Estatísticos","de":"Statistische Grundlagen"},
+"c:2:desc":{"zh":"概率分布、回归分析、时间序列、波动率建模 — 金融时间序列分析入门。","es":"Distribuciones, regresión, series de tiempo, modelado de volatilidad — análisis financiero.","fr":"Distributions, régression, séries temporelles, modélisation de la volatilité.","ja":"確率分布、回帰分析、時系列分析、ボラティリティモデリング。","ko":"확률분포, 회귀분석, 시계열분석, 변동성 모델링.","pt":"Distribuições, regressão, séries temporais, modelagem de volatilidade.","de":"Verteilungen, Regression, Zeitreihen, Volatilitätsmodellierung."},
+"c:3:title":{"zh":"技术指标","es":"Indicadores Técnicos","fr":"Indicateurs Techniques","ja":"テクニカル指標","ko":"기술적 지표","pt":"Indicadores Técnicos","de":"Technische Indikatoren"},
+"c:3:desc":{"zh":"移动平均线、RSI、MACD、布林带 — 用 Python 计算和解读交易信号。","es":"Medias móviles, RSI, MACD, Bollinger — calcula señales de trading con Python.","fr":"Moyennes mobiles, RSI, MACD, Bollinger — calculez les signaux de trading.","ja":"移動平均線、RSI、MACD、ボリンジャーバンド — Pythonで売買シグナルを計算。","ko":"이동평균선, RSI, MACD, 볼린저밴드 — Python으로 트레이딩 신호를 계산합니다.","pt":"Médias móveis, RSI, MACD, Bollinger — calcule sinais de trading com Python.","de":"Gleitende Durchschnitte, RSI, MACD, Bollinger — Handelssignale mit Python."},
+"c:4:title":{"zh":"交易策略开发","es":"Desarrollo de Estrategias","fr":"Développement de Stratégies","ja":"取引戦略の開発","ko":"트레이딩 전략 개발","pt":"Desenvolvimento de Estratégias","de":"Strategieentwicklung"},
+"c:4:desc":{"zh":"趋势跟踪、均值回归、动量策略 — 从设计到回测到验证的完整流程。","es":"Tendencia, reversión a la media, momentum — del diseño al backtesting.","fr":"Suivi de tendance, retour à la moyenne, momentum — conception au backtesting.","ja":"トレンドフォロー、平均回帰、モメンタム — 設計からバックテストまで。","ko":"추세추종, 평균회귀, 모멘텀 — 설계부터 백테스팅까지.","pt":"Tendência, reversão à média, momentum — do design ao backtesting.","de":"Trendfolgend, Mean Reversion, Momentum — vom Design zum Backtesting."},
+"c:5:title":{"zh":"风险与投资组合管理","es":"Riesgo y Gestión de Cartera","fr":"Risque et Gestion de Portefeuille","ja":"リスクとポートフォリオ管理","ko":"리스크 & 포트폴리오 관리","pt":"Risco e Gestão de Portfólio","de":"Risiko & Portfoliomanagement"},
+"c:5:desc":{"zh":"仓位管理、凯利公式、投资组合构建、最大回撤控制 — 活下来才能赢。","es":"Posiciones, Kelly, construcción de cartera, control de drawdown — sobrevivir para ganar.","fr":"Positions, Kelly, construction de portefeuille, contrôle du drawdown.","ja":"ポジション管理、ケリー基準、ポートフォリオ構築、ドローダウン管理。","ko":"포지션 관리, 켈리 기준, 포트폴리오 구축, 드로다운 관리.","pt":"Posições, Kelly, construção de portfólio, controle de drawdown.","de":"Positionen, Kelly, Portfoliokonstruktion, Drawdown-Management."},
+"c:6:title":{"zh":"机器学习与量化交易","es":"Machine Learning para Trading","fr":"Machine Learning pour le Trading","ja":"機械学習と量的取引","ko":"머신러닝 트레이딩","pt":"Machine Learning para Trading","de":"Machine Learning für Trading"},
+"c:6:desc":{"zh":"特征工程、分类模型、时间序列交叉验证 — 避免金融ML的常见陷阱。","es":"Ingeniería de features, clasificación, validación cruzada en series de tiempo.","fr":"Ingénierie de features, classification, validation croisée temporelle.","ja":"特徴量エンジニアリング、分類モデル、時系列クロスバリデーション。","ko":"피처 엔지니어링, 분류 모델, 시계열 교차검증.","pt":"Engenharia de features, classificação, validação cruzada temporal.","de":"Feature Engineering, Klassifikation, Zeitreihen-Kreuzvalidierung."},
+"c:7:title":{"zh":"期权与高级主题","es":"Opciones y Temas Avanzados","fr":"Options et Sujets Avancés","ja":"オプションと上級トピック","ko":"옵션 & 고급 주제","pt":"Opções e Tópicos Avançados","de":"Optionen & Fortgeschrittene Themen"},
+"c:7:desc":{"zh":"期权定价、希腊字母、市场微观结构、订单簿 — 通往专业量化交易的桥梁。","es":"Pricing de opciones, griegos, microestructura, libro de órdenes — hacia el trading profesional.","fr":"Pricing d'options, grecs, microstructure, carnet d'ordres — vers le trading professionnel.","ja":"オプション価格、グリークス、市場マイクロストラクチャー — プロの量的取引へ。","ko":"옵션 가격, 그릭스, 시장 미시구조 — 전문 퀀트 트레이딩으로.","pt":"Pricing de opções, gregas, microestrutura — rumo ao trading profissional.","de":"Optionspreise, Griechen, Marktmikrostruktur — zum professionellen Trading."}
+};
+const preT=(key,lang)=>PRE_T[key]?.[lang]||null;
+
+
+const COURSES=[
+// ═══ COURSE 1: Financial Market Foundations ═══
+// Based on: A Random Walk Down Wall Street (Malkiel), general finance
+{id:'financial-foundations',title:'Financial Market Foundations',icon:'💰',color:'#10b981',
+desc:'Understand how markets work, asset types, risk & return — from Random Walk theory to behavioral finance.',
+topics:[
+// ── Topic 1: What is Quantitative Trading ──
+{id:1001,title:"What is Quantitative Trading?",icon:"🤖",
+lessons:[
+{title:"Trading Meets Mathematics",content:"**Quantitative trading** uses mathematical models, statistical analysis, and computer programs to make trading decisions — replacing gut feelings with data.\n\nImagine two chefs:\n• **Traditional chef**: tastes as they go, adds \"a pinch of this\"\n• **Quantitative chef**: follows a precise recipe, measures everything with scales\n\nBoth can make great food, but the quantitative chef's results are **reproducible and testable**.\n\n[[[diagram:quant-overview]]]\n\n**What quants actually do:**\n1. **Collect data** — prices, volumes, news, economic indicators\n2. **Build models** — mathematical rules that predict price movements\n3. **Backtest** — test the model on historical data\n4. **Execute** — let the computer trade automatically\n5. **Monitor** — track performance, adjust when needed\n\n**Why Python?** It's the #1 language for quant trading because:\n• Massive libraries: pandas, NumPy, scikit-learn, matplotlib\n• Easy to learn, fast to prototype\n• Used by hedge funds (Two Sigma, Citadel, DE Shaw)\n• Free and open-source\n\n⚠️ **Important disclaimer:** Trading involves substantial risk. Past performance does not guarantee future results. Never invest money you cannot afford to lose."},
+{title:"The Quant Trading Landscape",content:"**Who trades quantitatively?**\n\n[[[diagram:market-participants]]]\n\nQuantitative strategies span many styles and timeframes:\n\n```\nTimeframe        | Style              | Example\n─────────────────|────────────────────|──────────────────\nMicroseconds     | High-Frequency     | Market making\nMinutes-Hours    | Intraday           | Statistical arb\nDays-Weeks       | Swing Trading      | Mean reversion\nWeeks-Months     | Position Trading   | Trend following\nMonths-Years     | Portfolio          | Factor investing\n```\n\n**Key terminology:**\n• **Alpha** — returns above the market benchmark (the \"edge\")\n• **Beta** — correlation with the overall market\n• **Sharpe Ratio** — risk-adjusted return (higher = better)\n• **Drawdown** — peak-to-trough decline (how much you can lose)\n• **Backtest** — testing a strategy on historical data\n\n**The quant's goal:** Find a strategy with **positive alpha** (beating the market) and **acceptable risk** (not losing your shirt).\n\nAs Ernest Chan writes: \"The beauty of quantitative trading is that it takes much of the emotion out of the process.\"\n\n[[[diagram:summary:Quant trading = math + data + code → trading decisions|||Python is the #1 language for quant finance|||Alpha = returns above benchmark, the 'edge' you seek|||Always backtest before risking real money|||Start small, learn the fundamentals, then scale up]]]"}
+],
+exercises:[
+{title:"Quant vs Traditional",task:"Print 'quantitative' if using data/models, or 'traditional' if using gut feeling.",starterCode:"# Math + Data + Code = ?\n",expectedOutput:"quantitative",hint:"Quant = math/data driven",bestExplanation:"Quantitative trading replaces intuition with measurable, testable, reproducible rules.",solutions:[{label:"⭐ Best",code:"print('quantitative')",best:true}]},
+{title:"Key Metric",task:"What measures risk-adjusted return? Print: Sharpe Ratio",starterCode:"# Risk-adjusted return metric?\n",expectedOutput:"Sharpe Ratio",hint:"Named after William Sharpe",bestExplanation:"Sharpe Ratio = (Return - Risk-free Rate) / Volatility. Higher is better — 1.0 is decent, 2.0+ is excellent.",solutions:[{label:"⭐ Best",code:"print('Sharpe Ratio')",best:true}]},
+{title:"Alpha Definition",task:"Alpha means returns above the ___. Print the missing word.",starterCode:"# Alpha = returns above the ___?\n",expectedOutput:"benchmark",hint:"Usually S&P 500 index",bestExplanation:"Alpha is the excess return compared to a benchmark (like the S&P 500). Zero alpha = matching the market.",solutions:[{label:"⭐ Best",code:"print('benchmark')",best:true}]}
+]},
+
+// ── Topic 2: How Markets Work ──
+{id:1002,title:"How Financial Markets Work",icon:"🏛️",
+lessons:[
+{title:"Markets, Exchanges & Assets",content:"**What is a financial market?** A place where buyers and sellers meet to trade assets — like a farmer's market, but for stocks, bonds, and currencies.\n\n**Major asset classes:**\n\n```\nAsset Class   | Examples              | Characteristics\n──────────────|───────────────────────|─────────────────────\nStocks        | AAPL, MSFT, TSLA     | Ownership in companies\nBonds         | US Treasury, Corp     | Lending money for interest\nFX (Forex)    | EUR/USD, GBP/JPY     | Currency exchange rates\nCommodities   | Gold, Oil, Wheat     | Physical goods\nDerivatives   | Options, Futures     | Contracts based on other assets\nCrypto        | BTC, ETH             | Digital assets\nETFs          | SPY, QQQ, VTI       | Baskets of assets\n```\n\n**Key exchanges:**\n• **NYSE / NASDAQ** — US stocks (world's largest)\n• **CME** — Futures and options\n• **ICE** — Energy, commodities\n• **LSE** — London stocks\n• **HKEX / SSE** — Asia-Pacific\n\n**How a trade works:**\n1. You decide to buy 100 shares of AAPL at $175\n2. Your order goes to the exchange\n3. The exchange matches you with a seller at $175\n4. Money and shares are exchanged (settlement)"},
+{title:"Understanding Price Data (OHLCV)",content:"Every financial instrument has price data recorded over time. The standard format is **OHLCV**:\n\n[[[diagram:candlestick-anatomy]]]\n\n```\nO = Open    → Price at start of period\nH = High    → Highest price during period\nL = Low     → Lowest price during period\nC = Close   → Price at end of period (most important!)\nV = Volume  → Number of shares/contracts traded\n```\n\n**What each tells us:**\n• **Open vs Close** → Did the period end higher or lower?\n• **High - Low** → How volatile was the period? (the \"range\")\n• **Volume** → How much conviction? High volume = strong move\n\n**Candlestick patterns:**\n• Green candle: Close > Open (price went UP)\n• Red candle: Close < Open (price went DOWN)\n• Long wick: price was rejected at that level\n• Small body: indecision in the market\n\n```python\n# In Python with yfinance:\nimport yfinance as yf\ndata = yf.download('AAPL', period='1mo')\nprint(data.head())\n# Shows: Open, High, Low, Close, Adj Close, Volume\n```\n\n[[[diagram:summary:OHLCV = Open, High, Low, Close, Volume|||Close price is the most commonly used for analysis|||Volume confirms the strength of price moves|||Green candle = bullish (up), Red candle = bearish (down)|||Always use Adjusted Close for historical analysis (accounts for splits/dividends)]]]"}
+],
+exercises:[
+{title:"OHLCV Meaning",task:"What does the 'V' in OHLCV stand for? Print it.",starterCode:"# OHLCV → O=Open, H=High, L=Low, C=Close, V=?\n",expectedOutput:"Volume",hint:"How many shares were traded",bestExplanation:"Volume measures trading activity — high volume confirms the reliability of a price move.",solutions:[{label:"⭐ Best",code:"print('Volume')",best:true}]},
+{title:"Candle Color",task:"Close=$155, Open=$150. Is this candle green or red? Print the color.",starterCode:"close_price = 155\nopen_price = 150\n",expectedOutput:"green",hint:"Green when Close > Open",bestExplanation:"Close > Open means price went up during this period = green (bullish) candle.",solutions:[{label:"⭐ Best",code:"close_price = 155\nopen_price = 150\nif close_price > open_price:\n    print('green')\nelse:\n    print('red')",best:true},{label:"Ternary",code:"close_price = 155\nopen_price = 150\nprint('green' if close_price > open_price else 'red')"}]},
+{title:"Daily Range",task:"High=$160, Low=$148. Print the daily range (High - Low).",starterCode:"high = 160\nlow = 148\n",expectedOutput:"12",hint:"Range = High - Low",bestExplanation:"The range measures intraday volatility. Wider range = more volatile day. ATR uses average of this.",solutions:[{label:"⭐ Best",code:"high = 160\nlow = 148\nprint(high - low)",best:true}]}
+]},
+
+// ── Topic 3: Returns & Risk ──
+{id:1003,title:"Returns, Risk & Key Metrics",icon:"📊",
+lessons:[
+{title:"Calculating Returns",content:"**Returns** measure how much money you made or lost, expressed as a percentage.\n\n[[[diagram:return-calc]]]\n\n**Simple Return:**\n```python\n# Simple (arithmetic) return\nreturn_pct = (sell_price - buy_price) / buy_price * 100\n\n# Example: Buy at $100, sell at $115\nreturn_pct = (115 - 100) / 100 * 100  # = 15%\n```\n\n**Log Return** (preferred by quants):\n```python\nimport math\nlog_return = math.log(sell_price / buy_price)\n\n# Example: math.log(115/100) = 0.1398 = 13.98%\n```\n\n**Why log returns?** They have nice mathematical properties:\n• They're **additive** over time (simple returns are not)\n• They're approximately **normally distributed**\n• They work better in statistical models\n\n**In pandas:**\n```python\n# Daily simple returns\ndf['return'] = df['Close'].pct_change()\n\n# Daily log returns\nimport numpy as np\ndf['log_return'] = np.log(df['Close'] / df['Close'].shift(1))\n\n# Cumulative return\ndf['cumulative'] = (1 + df['return']).cumprod() - 1\n```"},
+{title:"Understanding Risk",content:"**\"Return is what you hope for. Risk is what you actually get.\"**\n\n**Volatility (σ)** — the standard deviation of returns:\n```python\n# Daily volatility\ndaily_vol = df['return'].std()\n\n# Annualized volatility (assuming 252 trading days)\nannual_vol = daily_vol * (252 ** 0.5)\n# Typical: stocks 15-25%, bonds 5-8%, crypto 60-100%\n```\n\n**Sharpe Ratio** — reward per unit of risk:\n```python\n# Sharpe = (annualized return - risk-free rate) / annualized volatility\nannual_return = df['return'].mean() * 252\nrisk_free = 0.05  # 5% Treasury rate\nsharpe = (annual_return - risk_free) / annual_vol\n# Good: > 1.0, Great: > 2.0, Legendary: > 3.0\n```\n\n**Maximum Drawdown** — worst peak-to-trough decline:\n```python\ncumulative = (1 + df['return']).cumprod()\npeak = cumulative.cummax()\ndrawdown = (cumulative - peak) / peak\nmax_drawdown = drawdown.min()  # e.g., -0.35 = lost 35%\n```\n\n**Sortino Ratio** — like Sharpe but only penalizes downside risk:\n```python\ndownside = df['return'][df['return'] < 0].std()\nsortino = (annual_return - risk_free) / (downside * 252**0.5)\n```\n\n[[[diagram:summary:Volatility (σ) measures how much returns fluctuate|||Sharpe Ratio = excess return / volatility. Higher = better risk-adjusted performance|||Maximum Drawdown = worst peak-to-trough loss. Critical for survival|||Log returns are preferred by quants: additive and approximately normal|||Annualize daily stats: multiply return by 252, volatility by √252|||Sortino Ratio only counts downside volatility (more realistic)]]]"}
+],
+exercises:[
+{title:"Simple Return",task:"Bought at $80, sold at $100. Print return percentage.",starterCode:"buy = 80\nsell = 100\n",expectedOutput:"25.0",hint:"(sell-buy)/buy × 100",bestExplanation:"(100-80)/80 = 0.25 = 25%. Simple return is intuitive but doesn't compound well over time.",solutions:[{label:"⭐ Best",code:"buy = 80\nsell = 100\nprint((sell - buy) / buy * 100)",best:true}]},
+{title:"Loss Return",task:"Bought at $200, now worth $150. Print the return.",starterCode:"buy = 200\ncurrent = 150\n",expectedOutput:"-25.0",hint:"Negative = loss",bestExplanation:"(150-200)/200 = -25%. A 25% loss needs a 33% gain to recover — losses are asymmetric!",solutions:[{label:"⭐ Best",code:"buy = 200\ncurrent = 150\nprint((current - buy) / buy * 100)",best:true}]},
+{title:"Sharpe Ratio",task:"Annual return=12%, risk-free=4%, volatility=16%. Print Sharpe ratio.",starterCode:"annual_ret = 0.12\nrisk_free = 0.04\nvol = 0.16\n",expectedOutput:"0.5",hint:"(return - risk_free) / volatility",bestExplanation:"Sharpe = (0.12-0.04)/0.16 = 0.5. Below 1.0 — needs improvement. Most hedge funds target 1.0-2.0.",solutions:[{label:"⭐ Best",code:"annual_ret = 0.12\nrisk_free = 0.04\nvol = 0.16\nprint((annual_ret - risk_free) / vol)",best:true}]},
+{title:"Annualize Vol",task:"Daily volatility is 0.02 (2%). Print annualized (×√252). Round to 4 decimals.",starterCode:"daily_vol = 0.02\n",expectedOutput:"0.3175",hint:"daily × sqrt(252)",bestExplanation:"0.02 × √252 ≈ 0.3175 = 31.75% annual volatility. Typical for a volatile stock.",solutions:[{label:"⭐ Best",code:"daily_vol = 0.02\nprint(round(daily_vol * 252 ** 0.5, 4))",best:true}]}
+]},
+
+// ── Topic 4: EMH & Random Walk ──
+{id:1004,title:"Efficient Markets & Random Walks",icon:"🎲",
+lessons:[
+{title:"The Efficient Market Hypothesis",content:"In 1973, Burton Malkiel published **\"A Random Walk Down Wall Street\"**, arguing that stock prices follow a random walk and are essentially unpredictable.\n\n[[[diagram:emh-levels]]]\n\nThe **Efficient Market Hypothesis (EMH)** states that asset prices reflect all available information, making it impossible to consistently \"beat the market.\"\n\n**Three forms of EMH:**\n\n• **Weak form**: Prices reflect all past trading data. You can't profit from chart patterns alone.\n• **Semi-strong**: Prices reflect all public information (earnings, news). Fundamental analysis can't beat the market.\n• **Strong form**: Prices reflect ALL information, including insider info. Nobody can beat the market.\n\n**What does this mean for quants?**\nIf markets were perfectly efficient, quantitative trading would be pointless! But the reality is more nuanced:\n\n```\nEMH says:     \"You can't beat the market\"\nReality:       Markets are MOSTLY efficient, but NOT perfectly\nOpportunity:  Small, temporary inefficiencies exist\nQuant edge:   Find them faster than humans can\n```\n\n**Market anomalies that challenge EMH:**\n• **Momentum effect**: Winners tend to keep winning (3-12 months)\n• **Mean reversion**: Extreme moves tend to reverse\n• **Value premium**: Cheap stocks outperform over time\n• **Volatility clustering**: Calm periods follow calm, volatile follows volatile\n• **January effect**: Stocks tend to rise in January"},
+{title:"Random Walk Theory & Implications",content:"**Random Walk** means each price change is independent of previous changes — like a drunk person stumbling: you can't predict the next step from the last one.\n\n```python\n# Simulating a random walk (like stock prices)\nimport random\n\nprice = 100\nprices = [price]\nfor day in range(252):  # One trading year\n    change = random.gauss(0, 0.01)  # Mean=0, StdDev=1%\n    price = price * (1 + change)\n    prices.append(price)\n\n# Each simulation looks completely different!\n```\n\n**Key implication**: If prices are truly random, then:\n• Past prices don't predict future prices\n• Chart patterns are meaningless\n• Technical analysis is voodoo\n\n**BUT — quants have found that:**\n1. Returns are NOT perfectly normally distributed (fat tails exist)\n2. Volatility IS predictable (GARCH models, Tsay)\n3. Some patterns DO persist (momentum, mean reversion)\n4. Market microstructure creates exploitable patterns\n\n**The quant's philosophy:**\n\"Markets are efficient enough that most people can't beat them. But with the right math, data, and technology, there are edges to be found.\" — Ernest Chan\n\n[[[diagram:summary:EMH: prices reflect available information, hard to beat the market|||Random Walk: each price change is independent (like coin flips)|||Reality: markets are MOSTLY efficient, but NOT perfectly|||Quants exploit small, temporary inefficiencies|||Momentum, mean reversion, and fat tails challenge pure EMH|||Your edge must be statistically significant, not just lucky]]]"}
+],
+exercises:[
+{title:"EMH Form",task:"Which EMH form says you can't profit from chart patterns? Print: weak",starterCode:"# Chart patterns = past trading data\n",expectedOutput:"weak",hint:"Past prices = weak form",bestExplanation:"Weak form EMH says past prices are already reflected. If true, technical analysis alone can't generate profit.",solutions:[{label:"⭐ Best",code:"print('weak')",best:true}]},
+{title:"Market Anomaly",task:"Past winners tend to keep winning for 3-12 months. This is called? Print it.",starterCode:"# Winners keep winning...\n",expectedOutput:"momentum",hint:"One of the most robust anomalies",bestExplanation:"Momentum is one of the most well-documented anomalies across markets and time periods (Jegadeesh & Titman, 1993).",solutions:[{label:"⭐ Best",code:"print('momentum')",best:true}]},
+{title:"Random Walk Sim",task:"Simulate: start at 100, go up 5%, then down 3%. Print final price.",starterCode:"price = 100\n",expectedOutput:"101.85",hint:"100 × 1.05 × 0.97",bestExplanation:"100 × 1.05 × 0.97 = 101.85. Note: +5% then -5% doesn't get you back to 100! Returns are asymmetric.",solutions:[{label:"⭐ Best",code:"price = 100\nprice = price * 1.05\nprice = price * 0.97\nprint(price)",best:true}]}
+]},
+
+// ── Topic 5: Behavioral Finance ──
+{id:1005,title:"Behavioral Finance & Why Quants Win",icon:"🧠",
+lessons:[
+{title:"Human Biases in Trading",content:"**Behavioral finance** studies how psychology affects financial decisions. Humans are NOT rational investors — they're emotional, biased, and predictable in their irrationality.\n\n[[[diagram:behavioral-biases]]]\n\n**The biggest biases that kill traders:**\n\n**1. Loss Aversion** (Kahneman & Tversky)\nLosing $100 feels about 2× worse than gaining $100 feels good. This causes traders to:\n• Hold losing positions too long (\"it'll come back!\")\n• Sell winners too early (\"lock in the profit!\")\n\n**2. Overconfidence**\n• 80% of drivers think they're above average (mathematically impossible)\n• Traders overestimate their skill and underestimate randomness\n• This leads to excessive trading and poor risk management\n\n**3. Anchoring**\n\"I bought at $50, so it's 'cheap' at $40\" — the buy price is irrelevant! What matters is the current data.\n\n**4. Herding**\nFollowing the crowd feels safe. But as Warren Buffett says: \"Be fearful when others are greedy, greedy when others are fearful.\"\n\n**This is the quant's biggest advantage:**\n```\nHuman trader:  Fear → sell at bottom\n               Greed → buy at top\n               Emotion → random decisions\n\nQuant system:  Data → signal → execute\n               No fear, no greed\n               Consistent, reproducible\n```"},
+{title:"Why Algorithms Beat Emotions",content:"**The quantitative edge over emotional traders:**\n\n**1. Discipline** — An algorithm follows rules 100% of the time\n```python\n# Human: \"The market feels scary, maybe I should wait...\"\n# Algorithm:\nif signal == 'BUY' and risk_check_passed:\n    execute_trade()  # No hesitation, no emotion\n```\n\n**2. Speed** — Algorithms can scan thousands of stocks in seconds\n```python\n# Check all S&P 500 stocks for your signal\nfor ticker in sp500_tickers:  # 500 stocks\n    data = get_data(ticker)\n    if your_strategy(data):   # Your rules\n        trade(ticker)          # Instant execution\n```\n\n**3. Backtesting** — Test before risking real money\n```python\n# Would this strategy have worked in 2020-2024?\nresults = backtest(strategy, data='2020-01-01', end='2024-12-31')\nprint(f'Return: {results.total_return:.1%}')\nprint(f'Sharpe: {results.sharpe:.2f}')\nprint(f'Max Drawdown: {results.max_drawdown:.1%}')\n```\n\n**4. Objectivity** — Every decision is based on data, not feelings\n\n**But quants aren't perfect either!**\n• Models can be overfitted to historical data\n• Black swan events (COVID crash, 2008) break models\n• Everyone using the same strategy reduces its effectiveness\n• \"The model worked in backtesting!\" is the most expensive sentence in finance\n\n[[[diagram:summary:Behavioral biases (loss aversion, overconfidence, herding) cause systematic errors|||Quantitative systems remove emotion from trading decisions|||Algorithms provide: discipline, speed, backtesting, objectivity|||BUT: models can overfit, black swans exist, crowded trades fail|||The best approach: quantitative models with human oversight|||Always paper trade before using real money]]]"}
+],
+exercises:[
+{title:"Loss Aversion",task:"Losing $100 feels how many times worse than gaining $100? Print the number.",starterCode:"# Kahneman & Tversky prospect theory\n",expectedOutput:"2",hint:"Losses hurt roughly 2×",bestExplanation:"Prospect Theory (Kahneman & Tversky, 1979) shows losses are felt ~2× as strongly as equivalent gains.",solutions:[{label:"⭐ Best",code:"print(2)",best:true}]},
+{title:"Quant Advantage",task:"What does a quant system remove that humans can't? Print: emotion",starterCode:"# Algorithms don't feel...\n",expectedOutput:"emotion",hint:"Fear, greed, hope",bestExplanation:"The #1 advantage of systematic trading: emotions can't override the rules. The algorithm executes regardless of fear or greed.",solutions:[{label:"⭐ Best",code:"print('emotion')",best:true}]},
+{title:"Recovery Math",task:"After a 50% loss, what % gain is needed to recover? Print the number.",starterCode:"loss_pct = 50\nremaining = 100 - loss_pct\n",expectedOutput:"100.0",hint:"Go from $50 back to $100",bestExplanation:"$100 → $50 (50% loss). Need $50→$100 = 100% gain to recover. This is why risk management is CRITICAL.",solutions:[{label:"⭐ Best",code:"loss_pct = 50\nremaining = 100 - loss_pct\nrecovery = (100 - remaining) / remaining * 100\nprint(recovery)",best:true}]}
+]}
+]},
+
+// ═══ COURSE 2: Python for Finance ═══
+{id:'python-finance',title:'Python for Finance',icon:'🐍',color:'#fbbf24',
+desc:'Build your quant toolkit: yfinance for data, pandas for analysis, NumPy for computation, matplotlib for visualization.',
+topics:[
+{id:2001,title:"Getting Market Data",icon:"📥",
+lessons:[
+{title:"yfinance — Free Market Data",content:"**yfinance** is the easiest way to get free financial data in Python.\n\n```python\nimport yfinance as yf\n\n# Download historical data\naapl = yf.download('AAPL', start='2023-01-01', end='2024-01-01')\nprint(aapl.head())\n# Shows: Open, High, Low, Close, Adj Close, Volume\n\n# Quick info\nticker = yf.Ticker('AAPL')\nprint(ticker.info['marketCap'])     # Market cap\nprint(ticker.info['sector'])        # Technology\nprint(ticker.info['trailingPE'])    # P/E ratio\n```\n\n**Common parameters:**\n```python\n# Different periods\ndata = yf.download('MSFT', period='1mo')   # Last month\ndata = yf.download('MSFT', period='1y')    # Last year\ndata = yf.download('MSFT', period='max')   # All available\n\n# Multiple tickers at once\ndata = yf.download(['AAPL','MSFT','GOOG'], period='1y')\n\n# Different intervals\ndata = yf.download('AAPL', period='5d', interval='1h')  # Hourly\ndata = yf.download('AAPL', period='1mo', interval='1d') # Daily\n```"},
+{title:"Exploring Your Data",content:"Once you download data, explore it with pandas:\n\n```python\nimport yfinance as yf\ndf = yf.download('AAPL', period='1y')\n\n# Basic exploration\nprint(df.shape)          # (rows, columns)\nprint(df.columns)        # Column names\nprint(df.describe())     # Statistics summary\nprint(df.tail())         # Last 5 rows\n\n# Most important: Adjusted Close\n# Accounts for stock splits and dividends\nprices = df['Adj Close']\n\n# Date range\nprint(f'From: {df.index[0]}')\nprint(f'To:   {df.index[-1]}')\nprint(f'Days: {len(df)}')\n```\n\n**Always use Adjusted Close** for historical analysis — it accounts for stock splits and dividends, giving you the true return.\n\n[[[diagram:summary:yfinance is free and easy: yf.download('AAPL', period='1y')|||Always use 'Adj Close' for analysis (adjusts for splits & dividends)|||Download multiple tickers: yf.download(['AAPL','MSFT','GOOG'])|||Intervals: '1d' (daily), '1h' (hourly), '1wk' (weekly)|||Periods: '1mo', '3mo', '1y', '5y', 'max'|||yf.Ticker() gives fundamental data: P/E ratio, market cap, sector]]]"}
+],
+exercises:[
+{title:"Import yfinance",task:"Print the standard yfinance import statement.",starterCode:"# How to import yfinance?\n",expectedOutput:"import yfinance as yf",hint:"Convention: yf",bestExplanation:"'yf' is the universal alias for yfinance, just like 'pd' for pandas and 'np' for NumPy.",solutions:[{label:"⭐ Best",code:"print('import yfinance as yf')",best:true}]},
+{title:"Download Period",task:"What period string downloads 1 year of data? Print it.",starterCode:"# yf.download('AAPL', period=?)\n",expectedOutput:"1y",hint:"Number + letter",bestExplanation:"period='1y' = 1 year. Other options: '1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y', '10y', 'max'.",solutions:[{label:"⭐ Best",code:"print('1y')",best:true}]},
+{title:"Adj Close",task:"Which column should you use for historical analysis? Print it.",starterCode:"# Accounts for splits and dividends\n",expectedOutput:"Adj Close",hint:"Not just 'Close'",bestExplanation:"'Adj Close' (Adjusted Close) accounts for stock splits and dividends. Without it, your returns would be wrong.",solutions:[{label:"⭐ Best",code:"print('Adj Close')",best:true}]}
+]},
+
+{id:2002,title:"pandas for Financial Analysis",icon:"🐼",
+lessons:[
+{title:"Working with Price DataFrames",content:"**pandas** is the backbone of quantitative finance in Python.\n\n```python\nimport pandas as pd\nimport numpy as np\n\n# After downloading data:\n# df = yf.download('AAPL', period='1y')\n\n# Daily returns\ndf['return'] = df['Adj Close'].pct_change()\n\n# Rolling statistics (moving window)\ndf['sma_20'] = df['Adj Close'].rolling(20).mean()   # 20-day average\ndf['vol_20'] = df['return'].rolling(20).std()        # 20-day volatility\n\n# Cumulative return\ndf['cum_return'] = (1 + df['return']).cumprod() - 1\n\n# Key metrics\nprint(f\"Total return: {df['cum_return'].iloc[-1]:.2%}\")\nprint(f\"Daily avg return: {df['return'].mean():.4%}\")\nprint(f\"Daily volatility: {df['return'].std():.4%}\")\nprint(f\"Win rate: {(df['return'] > 0).mean():.1%}\")\n```\n\n**Essential pandas operations for finance:**\n```python\n# Resampling (daily → monthly)\nmonthly = df['Adj Close'].resample('M').last()\n\n# Percentage change over N periods\ndf['monthly_return'] = df['Adj Close'].pct_change(21)  # ~1 month\n\n# Shift (yesterday's price)\ndf['prev_close'] = df['Adj Close'].shift(1)\n\n# Correlation between stocks\ncorrelation = returns_df.corr()  # Correlation matrix\n```"},
+{title:"Calculating Key Financial Metrics",content:"**The metrics every quant needs to calculate:**\n\n```python\nimport numpy as np\n\nreturns = df['return'].dropna()\n\n# ── Annualized Return ──\nannual_return = returns.mean() * 252\n\n# ── Annualized Volatility ──\nannual_vol = returns.std() * np.sqrt(252)\n\n# ── Sharpe Ratio ──\nrisk_free = 0.05  # 5% treasury rate\nsharpe = (annual_return - risk_free) / annual_vol\n\n# ── Maximum Drawdown ──\ncum = (1 + returns).cumprod()\npeak = cum.cummax()\ndrawdown = (cum - peak) / peak\nmax_dd = drawdown.min()\n\n# ── Sortino Ratio (downside only) ──\ndown_returns = returns[returns < 0]\ndown_vol = down_returns.std() * np.sqrt(252)\nsortino = (annual_return - risk_free) / down_vol\n\n# ── Win Rate ──\nwin_rate = (returns > 0).sum() / len(returns)\n\nprint(f'Annual Return:  {annual_return:.2%}')\nprint(f'Annual Vol:     {annual_vol:.2%}')\nprint(f'Sharpe Ratio:   {sharpe:.2f}')\nprint(f'Max Drawdown:   {max_dd:.2%}')\nprint(f'Sortino Ratio:  {sortino:.2f}')\nprint(f'Win Rate:       {win_rate:.1%}')\n```\n\n[[[diagram:summary:pct_change() calculates returns between periods|||rolling(N).mean() creates moving averages|||Annualize: return × 252, volatility × √252|||Maximum drawdown = worst peak-to-trough decline|||Sharpe measures return per unit of risk|||Win rate alone is meaningless without knowing win/loss size]]]"}
+],
+exercises:[
+{title:"Daily Return",task:"Yesterday: $100, Today: $105. Print pct_change as decimal.",starterCode:"yesterday = 100\ntoday = 105\n",expectedOutput:"0.05",hint:"(today - yesterday) / yesterday",bestExplanation:"pct_change = (105-100)/100 = 0.05 = 5%. This is what pandas pct_change() calculates.",solutions:[{label:"⭐ Best",code:"yesterday = 100\ntoday = 105\nprint((today - yesterday) / yesterday)",best:true}]},
+{title:"Cumulative Return",task:"Day 1: +10%, Day 2: -5%. Print cumulative return as decimal.",starterCode:"r1 = 0.10\nr2 = -0.05\n",expectedOutput:"0.045",hint:"(1+r1) × (1+r2) - 1",bestExplanation:"Cumulative = (1.10)(0.95) - 1 = 0.045 = 4.5%. Note: 10% - 5% ≠ 5% because compounding!",solutions:[{label:"⭐ Best",code:"r1 = 0.10\nr2 = -0.05\nprint((1 + r1) * (1 + r2) - 1)",best:true}]},
+{title:"Win Rate",task:"Out of 252 trading days, 140 had positive returns. Print win rate as decimal rounded to 2.",starterCode:"wins = 140\ntotal = 252\n",expectedOutput:"0.56",hint:"wins / total",bestExplanation:"Win rate = 140/252 ≈ 0.556. A 55%+ win rate with good risk/reward ratio is a solid strategy.",solutions:[{label:"⭐ Best",code:"wins = 140\ntotal = 252\nprint(round(wins / total, 2))",best:true}]}
+]},
+
+{id:2003,title:"Visualizing Financial Data",icon:"📈",
+lessons:[
+{title:"matplotlib for Finance Charts",content:"**Visualization** is critical for understanding markets and debugging strategies.\n\n```python\nimport matplotlib.pyplot as plt\n\n# ── Basic Price Chart ──\nplt.figure(figsize=(12, 6))\nplt.plot(df.index, df['Adj Close'], color='#10b981', linewidth=1.5)\nplt.title('AAPL Stock Price')\nplt.xlabel('Date')\nplt.ylabel('Price ($)')\nplt.grid(alpha=0.3)\nplt.show()\n\n# ── Price with Moving Averages ──\nplt.figure(figsize=(12, 6))\nplt.plot(df['Adj Close'], label='Price', alpha=0.7)\nplt.plot(df['sma_20'], label='SMA 20', linewidth=2)\nplt.plot(df['sma_50'], label='SMA 50', linewidth=2)\nplt.legend()\nplt.title('AAPL with Moving Averages')\nplt.show()\n\n# ── Return Distribution ──\nplt.figure(figsize=(10, 5))\nplt.hist(df['return'].dropna(), bins=50, color='#60a5fa', alpha=0.7)\nplt.axvline(0, color='white', linestyle='--')\nplt.title('Distribution of Daily Returns')\nplt.xlabel('Return')\nplt.ylabel('Frequency')\nplt.show()\n```\n\n**Key financial charts:**\n• **Price chart** — see the trend\n• **Returns histogram** — see the distribution (look for fat tails!)\n• **Drawdown chart** — see the pain\n• **Heatmap** — see correlations between assets\n\n[[[diagram:summary:matplotlib is the standard for financial charts in Python|||Always label axes and add titles for clarity|||Use figsize=(12,6) for readable financial charts|||Return histograms reveal if returns are normally distributed|||Drawdown charts show how much you could have lost|||Correlation heatmaps show which assets move together]]]"}
+],
+exercises:[
+{title:"Plot Library",task:"Print the standard matplotlib import statement.",starterCode:"# matplotlib import?\n",expectedOutput:"import matplotlib.pyplot as plt",hint:"Convention: plt",bestExplanation:"'plt' is the universal alias. Every finance tutorial, every quant library uses this convention.",solutions:[{label:"⭐ Best",code:"print('import matplotlib.pyplot as plt')",best:true}]},
+{title:"Figure Size",task:"Print the recommended figure size for financial charts as a tuple string.",starterCode:"# figsize for readable charts\n",expectedOutput:"(12, 6)",hint:"Wide and not too tall",bestExplanation:"(12, 6) gives a good aspect ratio for time series data — wide enough to see trends, not too tall.",solutions:[{label:"⭐ Best",code:"print('(12, 6)')",best:true}]},
+{title:"NumPy Import",task:"Print the standard NumPy import statement.",starterCode:"# NumPy import?\n",expectedOutput:"import numpy as np",hint:"Convention: np",bestExplanation:"'np' is the universal alias for NumPy. Used for math: np.sqrt(), np.log(), np.mean(), etc.",solutions:[{label:"⭐ Best",code:"print('import numpy as np')",best:true}]}
+]}
+]},
+
+// ═══ COURSE 3: Statistical Foundations ═══
+// Based on: Analysis of Financial Time Series (Tsay)
+{id:'statistics',title:'Statistical Foundations',icon:'📐',color:'#a78bfa',
+desc:'Probability, regression, time series, volatility modeling — the math behind quantitative finance (Tsay).',
+topics:[
+{id:3001,title:"Probability & Distributions",icon:"🎲",
+lessons:[
+{title:"Distributions in Finance",content:"**Why statistics matter for trading:** Every trading decision is a bet on probabilities. Understanding distributions helps you quantify risk.\n\n[[[diagram:normal-dist]]]\n\n**The Normal (Gaussian) Distribution:**\n• Most data clusters around the mean (μ)\n• 68% within 1 standard deviation (σ)\n• 95% within 2σ, 99.7% within 3σ\n• Daily stock returns are APPROXIMATELY normal\n\n```python\nimport numpy as np\n\n# Generate normal returns\nreturns = np.random.normal(mean=0.0005, std=0.02, size=252)\nprint(f'Mean:  {np.mean(returns):.4f}')\nprint(f'Std:   {np.std(returns):.4f}')\nprint(f'Min:   {np.min(returns):.4f}')\nprint(f'Max:   {np.max(returns):.4f}')\n```\n\n**BUT — real markets have FAT TAILS!**\nExtreme events (crashes, spikes) happen much more often than a normal distribution predicts. This is why risk management is so important.\n\n```python\n# Kurtosis measures tail thickness\n# Normal distribution: kurtosis = 3\n# Stock returns typically: kurtosis = 5-10 (fat tails!)\nfrom scipy.stats import kurtosis\nk = kurtosis(returns, fisher=False)  # Excess kurtosis\nprint(f'Kurtosis: {k:.2f}')  # > 3 means fat tails\n```\n\n**Skewness** measures asymmetry:\n• Negative skew: more extreme losses than gains (most stocks)\n• Positive skew: more extreme gains than losses"},
+{title:"Correlation & Regression Basics",content:"**Correlation** measures how two assets move together (-1 to +1):\n\n```python\nimport numpy as np\n\n# Correlation between two stocks\ncorr = np.corrcoef(returns_aapl, returns_msft)[0, 1]\nprint(f'Correlation: {corr:.3f}')\n# +1 = perfect positive, -1 = perfect negative, 0 = no relation\n\n# Correlation matrix for portfolio\n# returns_df.corr()  # pandas correlation matrix\n```\n\n**Why correlation matters:**\n• High correlation → both stocks move together (not diversified)\n• Low/negative correlation → good for diversification\n• Correlation CHANGES over time (especially during crises!)\n\n**Linear Regression** — the foundation of factor models:\n```python\n# Simple linear regression: Y = α + β × X\n# In finance: Stock_Return = α + β × Market_Return\n\n# β (beta) = sensitivity to market\n# α (alpha) = excess return (what quants seek!)\n\nimport numpy as np\n# Manual calculation:\nbeta = np.cov(stock_returns, market_returns)[0,1] / np.var(market_returns)\nalpha = np.mean(stock_returns) - beta * np.mean(market_returns)\n```\n\n**Key insight from Tsay:** In financial time series, the relationship between variables often changes over time (non-stationarity), making simple regression insufficient for prediction.\n\n[[[diagram:summary:Normal distribution: 68-95-99.7 rule (1σ, 2σ, 3σ)|||Real returns have fat tails — extreme events are more common than expected|||Kurtosis > 3 means fatter tails than normal (dangerous!)|||Correlation measures co-movement: +1 (same), -1 (opposite), 0 (none)|||Correlations INCREASE during market crashes (diversification fails when you need it most)|||Beta = market sensitivity, Alpha = excess return (the quant's goal)]]]"}
+],
+exercises:[
+{title:"1 Sigma Range",task:"What percentage of data falls within 1 standard deviation? Print it.",starterCode:"# Normal distribution: 1 sigma = ?\n",expectedOutput:"68",hint:"68-95-99.7 rule",bestExplanation:"68% within ±1σ, 95% within ±2σ, 99.7% within ±3σ. This is the most important statistical rule.",solutions:[{label:"⭐ Best",code:"print(68)",best:true}]},
+{title:"Correlation Range",task:"Correlation ranges from ___ to ___. Print: -1 to 1",starterCode:"# Correlation range?\n",expectedOutput:"-1 to 1",hint:"Perfect negative to perfect positive",bestExplanation:"-1 = perfectly opposite, 0 = no relation, +1 = perfectly together. In reality, most stock pairs are 0.3-0.7.",solutions:[{label:"⭐ Best",code:"print('-1 to 1')",best:true}]},
+{title:"Fat Tails",task:"Normal kurtosis=3. Stock returns typically have kurtosis of? Print: higher than 3",starterCode:"# Kurtosis of real stock returns\n",expectedOutput:"higher than 3",hint:"Extreme events happen more often",bestExplanation:"Stock returns typically have kurtosis of 5-10, meaning crashes and spikes happen MUCH more often than a normal distribution predicts.",solutions:[{label:"⭐ Best",code:"print('higher than 3')",best:true}]}
+]},
+
+{id:3002,title:"Time Series & Volatility",icon:"📉",
+lessons:[
+{title:"Time Series Concepts",content:"**Financial data is a time series** — observations ordered in time.\n\n**Stationarity** — the most important concept:\nA stationary series has constant mean and variance over time. Most statistical models REQUIRE stationarity.\n\n```python\n# Stock prices are NOT stationary (they trend up/down)\n# Stock RETURNS are approximately stationary\n\n# Test for stationarity: Augmented Dickey-Fuller test\nfrom statsmodels.tsa.stattools import adfuller\n\nresult = adfuller(df['return'].dropna())\nprint(f'ADF Statistic: {result[0]:.4f}')\nprint(f'p-value: {result[1]:.6f}')\n# p-value < 0.05 → stationary (good!)\n```\n\n**Autocorrelation** — does past predict future?\n```python\n# Autocorrelation of returns at different lags\nfor lag in [1, 5, 10, 20]:\n    ac = df['return'].autocorr(lag)\n    print(f'Lag {lag}: {ac:.4f}')\n# Low autocorrelation → hard to predict (consistent with EMH)\n# But volatility has HIGH autocorrelation!\n```\n\n**Key insight:** While returns are hard to predict, **volatility is predictable** — this is the foundation of many quant strategies."},
+{title:"Volatility Modeling",content:"**\"Volatility clustering\"** — calm periods follow calm, volatile follows volatile. This was the key insight that led to GARCH models.\n\n```python\n# EWMA (Exponentially Weighted Moving Average) Volatility\n# Gives more weight to recent observations\nlambda_param = 0.94  # RiskMetrics standard\n\n# In pandas:\newma_vol = df['return'].ewm(span=20).std() * np.sqrt(252)\n\n# Simple rolling volatility for comparison:\nrolling_vol = df['return'].rolling(20).std() * np.sqrt(252)\n```\n\n**GARCH (Generalized Autoregressive Conditional Heteroskedasticity)**\nThe gold standard for volatility modeling (Bollerslev 1986, see Tsay):\n\n```python\n# GARCH(1,1) model — most commonly used\n# σ²(t) = ω + α × r²(t-1) + β × σ²(t-1)\n#\n# Translation: tomorrow's volatility depends on:\n# ω = long-run average volatility\n# α × r² = impact of today's return (shock)\n# β × σ² = persistence of yesterday's volatility\n\n# In Python:\nfrom arch import arch_model\nmodel = arch_model(returns * 100, vol='GARCH', p=1, q=1)\nresult = model.fit(disp='off')\nprint(result.summary())\n# Forecast next day's volatility\nforecast = result.forecast(horizon=1)\n```\n\n**Why volatility matters:**\n1. Risk management — position sizing depends on expected volatility\n2. Options pricing — volatility is the key input\n3. Strategy selection — some strategies work better in high/low vol\n4. Regime detection — high vol = different market behavior\n\n[[[diagram:summary:Financial time series need stationarity — use returns, not prices|||Autocorrelation: returns ≈ 0 (hard to predict), but volatility is predictable!|||EWMA gives more weight to recent data (λ=0.94 is standard)|||GARCH models: tomorrow's volatility depends on today's return + yesterday's volatility|||Volatility clustering: calm follows calm, volatile follows volatile|||Volatility forecasting is MORE reliable than return forecasting]]]"}
+],
+exercises:[
+{title:"Stationarity Test",task:"Returns are stationary if ADF p-value is below what threshold? Print it.",starterCode:"# Standard significance level\n",expectedOutput:"0.05",hint:"5% significance",bestExplanation:"p-value < 0.05 means we reject the null hypothesis of non-stationarity. Returns are typically stationary; prices are not.",solutions:[{label:"⭐ Best",code:"print(0.05)",best:true}]},
+{title:"EWMA Lambda",task:"What is the standard RiskMetrics EWMA decay factor? Print it.",starterCode:"# RiskMetrics lambda\n",expectedOutput:"0.94",hint:"JP Morgan's choice",bestExplanation:"λ=0.94 was chosen by JP Morgan's RiskMetrics system. It gives ~6% weight to today's return and 94% to yesterday's variance.",solutions:[{label:"⭐ Best",code:"print(0.94)",best:true}]},
+{title:"Volatility Persistence",task:"In GARCH, α+β close to 1 means volatility is highly ___. Print the word.",starterCode:"# GARCH α + β ≈ 1\n",expectedOutput:"persistent",hint:"Shocks last a long time",bestExplanation:"When α+β ≈ 1 (typically 0.95-0.99), volatility shocks persist for a long time — a spike in volatility takes many days to decay.",solutions:[{label:"⭐ Best",code:"print('persistent')",best:true}]}
+]}
+]},
+
+// ═══ COURSE 4: Technical Indicators ═══
+{id:'indicators',title:'Technical Indicators & Signals',icon:'📊',color:'#60a5fa',
+desc:'Moving averages, RSI, MACD, Bollinger Bands — calculate and interpret key trading signals with Python.',
+topics:[
+{id:4001,title:"Moving Averages (SMA & EMA)",icon:"〰️",
+lessons:[
+{title:"SMA & EMA Explained",content:"**Moving averages** smooth out price noise to reveal trends — the most fundamental tool in technical analysis.\n\n[[[diagram:ma-crossover]]]\n\n**SMA (Simple Moving Average):**\n```python\n# Average of last N prices — all weighted equally\ndf['SMA_20'] = df['Close'].rolling(window=20).mean()\ndf['SMA_50'] = df['Close'].rolling(window=50).mean()\ndf['SMA_200'] = df['Close'].rolling(window=200).mean()\n```\n\n**EMA (Exponential Moving Average):**\nGives MORE weight to recent prices — reacts faster to changes\n```python\n# EMA puts more weight on recent data\ndf['EMA_12'] = df['Close'].ewm(span=12).mean()\ndf['EMA_26'] = df['Close'].ewm(span=26).mean()\n```\n\n**Key signals:**\n• **Golden Cross** 📈: Short MA crosses ABOVE long MA → bullish\n• **Death Cross** 📉: Short MA crosses BELOW long MA → bearish\n• Price above 200-day SMA → long-term uptrend\n• Price below 200-day SMA → long-term downtrend\n\n```python\n# Generate crossover signals\ndf['signal'] = 0\ndf.loc[df['SMA_20'] > df['SMA_50'], 'signal'] = 1   # Buy\ndf.loc[df['SMA_20'] < df['SMA_50'], 'signal'] = -1  # Sell\n```\n\n[[[diagram:summary:SMA = simple average of last N prices (all equal weight)|||EMA = exponential average (more weight to recent prices)|||Golden Cross: short MA crosses above long MA (bullish signal)|||Death Cross: short MA crosses below long MA (bearish signal)|||Common periods: 20 (short-term), 50 (medium), 200 (long-term)|||EMA reacts faster to price changes than SMA]]]"},
+],
+exercises:[
+{title:"SMA Calculation",task:"Prices: [10, 12, 14, 16, 18]. Print the 3-period SMA of the last 3 prices.",starterCode:"prices = [10, 12, 14, 16, 18]\n",expectedOutput:"16.0",hint:"Average of last 3",bestExplanation:"SMA(3) of [14, 16, 18] = (14+16+18)/3 = 16.0. This smooths out noise in the data.",solutions:[{label:"⭐ Best",code:"prices = [10, 12, 14, 16, 18]\nprint(sum(prices[-3:]) / 3)",best:true}]},
+{title:"Golden Cross",task:"SMA_20=$155, SMA_50=$150. Short above long = what signal? Print: buy",starterCode:"sma_20 = 155\nsma_50 = 150\n",expectedOutput:"buy",hint:"Short > Long = bullish",bestExplanation:"Golden Cross: short-term MA > long-term MA suggests upward momentum — a buy signal.",solutions:[{label:"⭐ Best",code:"sma_20 = 155\nsma_50 = 150\nif sma_20 > sma_50:\n    print('buy')\nelse:\n    print('sell')",best:true}]},
+{title:"EMA Weight",task:"EMA gives more weight to ___ prices. Print: recent",starterCode:"# EMA vs SMA difference\n",expectedOutput:"recent",hint:"Exponential = more weight to new data",bestExplanation:"EMA gives exponentially more weight to recent prices, making it faster to react to new trends than SMA.",solutions:[{label:"⭐ Best",code:"print('recent')",best:true}]}
+]},
+
+{id:4002,title:"RSI & Bollinger Bands",icon:"📊",
+lessons:[
+{title:"RSI — Overbought vs Oversold",content:"**RSI (Relative Strength Index)** measures momentum on a scale of 0-100.\n\n```python\n# RSI Calculation (14-period standard)\ndef calculate_rsi(prices, period=14):\n    delta = prices.diff()\n    gain = delta.where(delta > 0, 0)\n    loss = -delta.where(delta < 0, 0)\n    avg_gain = gain.rolling(period).mean()\n    avg_loss = loss.rolling(period).mean()\n    rs = avg_gain / avg_loss\n    rsi = 100 - (100 / (1 + rs))\n    return rsi\n\ndf['RSI'] = calculate_rsi(df['Close'])\n```\n\n**How to read RSI:**\n• **RSI > 70** → Overbought (potentially overvalued, may drop)\n• **RSI < 30** → Oversold (potentially undervalued, may rise)\n• **RSI divergence** → RSI moving opposite to price = reversal signal\n\n**Bollinger Bands** — volatility-adjusted channels:\n\n[[[diagram:bollinger-visual]]]\n\n```python\n# Bollinger Bands = SMA ± 2 standard deviations\ndf['BB_mid'] = df['Close'].rolling(20).mean()\ndf['BB_std'] = df['Close'].rolling(20).std()\ndf['BB_upper'] = df['BB_mid'] + 2 * df['BB_std']\ndf['BB_lower'] = df['BB_mid'] - 2 * df['BB_std']\n\n# Signals:\n# Price touches lower band → potential buy (oversold)\n# Price touches upper band → potential sell (overbought)\n# Bands narrow → low volatility → big move coming (\"squeeze\")\n```\n\n[[[diagram:summary:RSI measures momentum from 0-100 (14-period standard)|||RSI > 70 = overbought (sell signal), RSI < 30 = oversold (buy signal)|||Bollinger Bands = SMA ± 2σ — price usually stays within the bands|||Band squeeze (narrow bands) often precedes a big move|||Combine RSI + Bollinger for stronger signals|||No single indicator is reliable alone — always combine with others]]]"},
+],
+exercises:[
+{title:"RSI Overbought",task:"Above what RSI level is a stock considered overbought? Print the number.",starterCode:"# RSI overbought level\n",expectedOutput:"70",hint:"Standard threshold",bestExplanation:"RSI > 70 is the standard overbought threshold. Some traders use 80 for stronger signals.",solutions:[{label:"⭐ Best",code:"print(70)",best:true}]},
+{title:"Bollinger Width",task:"Bollinger uses SMA ± how many standard deviations? Print the number.",starterCode:"# Bollinger Band width\n",expectedOutput:"2",hint:"Standard setting",bestExplanation:"Default: SMA(20) ± 2σ. This captures about 95% of price action in a normal distribution.",solutions:[{label:"⭐ Best",code:"print(2)",best:true}]},
+{title:"RSI Period",task:"What is the standard RSI period? Print it.",starterCode:"# Default RSI lookback\n",expectedOutput:"14",hint:"Two trading weeks",bestExplanation:"14 periods is the standard RSI lookback, chosen by Welles Wilder. Shorter periods = more sensitive, longer = smoother.",solutions:[{label:"⭐ Best",code:"print(14)",best:true}]}
+]},
+
+{id:4003,title:"MACD — Trend & Momentum",icon:"📉",
+lessons:[
+{title:"MACD Explained",content:"**MACD (Moving Average Convergence Divergence)** combines trend AND momentum into one indicator.\n\n```python\n# MACD = EMA(12) - EMA(26)\n# Signal Line = EMA(9) of MACD\n# Histogram = MACD - Signal\n\ndf['EMA_12'] = df['Close'].ewm(span=12).mean()\ndf['EMA_26'] = df['Close'].ewm(span=26).mean()\ndf['MACD'] = df['EMA_12'] - df['EMA_26']\ndf['Signal'] = df['MACD'].ewm(span=9).mean()\ndf['Histogram'] = df['MACD'] - df['Signal']\n```\n\n**How to read MACD:**\n• **MACD crosses above Signal** → Bullish (buy)\n• **MACD crosses below Signal** → Bearish (sell)\n• **Histogram growing** → Trend strengthening\n• **Histogram shrinking** → Trend weakening\n• **MACD > 0** → Uptrend; **MACD < 0** → Downtrend\n\n**Divergence** — the most powerful MACD signal:\n• Price making new HIGH but MACD making lower high → bearish divergence\n• Price making new LOW but MACD making higher low → bullish divergence\n\n[[[diagram:summary:MACD = EMA(12) - EMA(26) — measures momentum|||Signal Line = EMA(9) of MACD — a trigger for buy/sell|||Histogram = MACD - Signal — shows strength of the trend|||MACD cross above signal = buy; cross below = sell|||Divergence between price and MACD = strongest reversal signal|||Combine MACD + RSI + MA for the most reliable signals]]]"},
+],
+exercises:[
+{title:"MACD Formula",task:"MACD = EMA(12) minus EMA(___). Print the missing number.",starterCode:"# MACD = EMA(12) - EMA(?)\n",expectedOutput:"26",hint:"Standard long EMA period",bestExplanation:"MACD uses 12-day (fast) and 26-day (slow) EMAs. Signal line is 9-day EMA of the MACD.",solutions:[{label:"⭐ Best",code:"print(26)",best:true}]},
+{title:"MACD Buy Signal",task:"MACD crosses above the Signal line. This is a ___ signal. Print it.",starterCode:"# MACD > Signal line\n",expectedOutput:"buy",hint:"Bullish crossover",bestExplanation:"MACD crossing above the signal line shows upward momentum building — a buy signal.",solutions:[{label:"⭐ Best",code:"print('buy')",best:true}]},
+{title:"Signal Line Period",task:"The MACD signal line uses an EMA of ___ periods. Print it.",starterCode:"# Signal line EMA period\n",expectedOutput:"9",hint:"Standard signal period",bestExplanation:"The signal line is a 9-period EMA of the MACD line. It acts as a trigger for buy/sell decisions.",solutions:[{label:"⭐ Best",code:"print(9)",best:true}]}
+]}
+]},
+
+// ═══ COURSE 5: Trading Strategy Development ═══
+// Based on: Ernest Chan, Robert Carver
+{id:'strategies',title:'Trading Strategy Development',icon:'🧮',color:'#f87171',
+desc:'Trend following, mean reversion, momentum — design, backtest, and validate strategies (Chan, Carver).',
+topics:[
+{id:5001,title:"Strategy Types",icon:"🏗️",
+lessons:[
+{title:"The Four Major Strategy Types",content:"Based on decades of quantitative research, most profitable strategies fall into four categories:\n\n[[[diagram:strategy-types]]]\n\n**1. Trend Following** (Systematic Trading — Carver)\n\"The trend is your friend.\" Buy when prices are rising, sell when falling.\n```python\n# Simple trend: price above moving average = uptrend\ndf['signal'] = 0\ndf.loc[df['Close'] > df['SMA_200'], 'signal'] = 1   # Long\ndf.loc[df['Close'] < df['SMA_200'], 'signal'] = -1  # Short\n```\n\n**2. Mean Reversion** (Algorithmic Trading — Ernest Chan)\nPrices that deviate too far from their mean tend to revert back.\n\n[[[diagram:mean-reversion-visual]]]\n\n```python\n# Z-score: how many std devs from mean\ndf['zscore'] = (df['Close'] - df['Close'].rolling(20).mean()) / df['Close'].rolling(20).std()\ndf.loc[df['zscore'] < -2, 'signal'] = 1    # Buy (too cheap)\ndf.loc[df['zscore'] > 2, 'signal'] = -1   # Sell (too expensive)\n```\n\n**3. Momentum** (documented by Jegadeesh & Titman)\nRecent winners continue winning, recent losers keep losing.\n\n[[[diagram:momentum-visual]]]\n\n```python\n# 12-month momentum (skip last month)\ndf['momentum'] = df['Close'].pct_change(252)  # 12-month return\ndf.loc[df['momentum'] > 0, 'signal'] = 1      # Buy winners\ndf.loc[df['momentum'] < 0, 'signal'] = -1     # Sell losers\n```\n\n**4. Statistical Arbitrage**\nExploit pricing relationships between correlated assets (pairs trading)."},
+{title:"Choosing Your Strategy",content:"**How to decide which strategy to use?**\n\nErnest Chan's framework:\n\n```\nQuestion                    | Mean Reversion | Trend Following\n────────────────────────────|────────────────|────────────────\nHolding period              | Short (days)   | Long (weeks+)\nWin rate                    | High (60%+)    | Low (30-40%)\nAvg win vs avg loss        | Small wins     | Big wins\nWorks best in              | Ranging market | Trending market\nRisk profile               | Many small     | Few large\n                           | gains/losses   | gains, many cuts\n```\n\n**Robert Carver's advice (Systematic Trading):**\n1. Start simple — complex ≠ better\n2. Diversify across strategy types\n3. Use proper position sizing (not gut feeling)\n4. Account for transaction costs\n5. Paper trade before going live\n\n**The Backtest Workflow:**\n```python\n# Step 1: Get data (out-of-sample period)\ndata = yf.download('SPY', start='2020-01-01')\n\n# Step 2: Generate signals\ndata['signal'] = your_strategy(data)\n\n# Step 3: Calculate strategy returns\ndata['strat_return'] = data['signal'].shift(1) * data['return']\n# shift(1) is CRITICAL — you trade on TODAY's signal, get TOMORROW's return\n\n# Step 4: Evaluate\ntotal_return = (1 + data['strat_return']).cumprod().iloc[-1] - 1\nsharpe = data['strat_return'].mean() / data['strat_return'].std() * 252**0.5\n```\n\n⚠️ **The #1 mistake:** Forgetting `shift(1)` — this causes look-ahead bias!\n\n[[[diagram:summary:Four main strategy types: Trend, Mean Reversion, Momentum, Stat Arb|||Mean reversion: high win rate, small gains. Trend: low win rate, big gains|||Always use shift(1) to avoid look-ahead bias in backtests|||Start simple — complex strategies often overfit|||Diversify across strategy types for more stable returns|||Transaction costs can kill a strategy — always include them in backtests]]]"}
+],
+exercises:[
+{title:"Strategy Match",task:"Buy when z-score < -2, sell when > 2. This is ___ strategy. Print it.",starterCode:"# Buying cheap, selling expensive\n",expectedOutput:"mean reversion",hint:"Prices returning to average",bestExplanation:"Z-score measures deviation from the mean. Buying at extremes and waiting for reversion = mean reversion (Ernest Chan).",solutions:[{label:"⭐ Best",code:"print('mean reversion')",best:true}]},
+{title:"Look-Ahead Bias",task:"To avoid look-ahead bias, we shift signals by ___. Print the number.",starterCode:"# signal.shift(?)\n",expectedOutput:"1",hint:"Trade today, get tomorrow's return",bestExplanation:"shift(1) ensures you use yesterday's signal for today's trade. Without it, you're 'cheating' by using future data.",solutions:[{label:"⭐ Best",code:"print(1)",best:true}]},
+{title:"Trend Signal",task:"Price=$150, SMA_200=$140. Price above SMA_200 = what signal? Print: long",starterCode:"price = 150\nsma_200 = 140\n",expectedOutput:"long",hint:"Above long-term average = uptrend",bestExplanation:"Price above 200-day SMA is the simplest trend-following signal. Used by institutional investors worldwide.",solutions:[{label:"⭐ Best",code:"price = 150\nsma_200 = 140\nif price > sma_200:\n    print('long')\nelse:\n    print('short')",best:true}]}
+]},
+
+{id:5002,title:"Backtesting & Pitfalls",icon:"🧪",
+lessons:[
+{title:"Building a Simple Backtester",content:"**Backtesting** = testing your strategy on historical data before risking real money.\n\n```python\nimport pandas as pd\nimport numpy as np\n\n# ── Complete backtest example ──\ndef backtest_ma_crossover(data, short=20, long=50):\n    df = data.copy()\n    \n    # 1. Calculate indicators\n    df['SMA_short'] = df['Close'].rolling(short).mean()\n    df['SMA_long'] = df['Close'].rolling(long).mean()\n    \n    # 2. Generate signals\n    df['signal'] = 0\n    df.loc[df['SMA_short'] > df['SMA_long'], 'signal'] = 1\n    df.loc[df['SMA_short'] < df['SMA_long'], 'signal'] = -1\n    \n    # 3. Calculate returns (SHIFT to avoid look-ahead!)\n    df['return'] = df['Close'].pct_change()\n    df['strat_return'] = df['signal'].shift(1) * df['return']\n    \n    # 4. Performance metrics\n    total = (1 + df['strat_return']).cumprod().iloc[-1] - 1\n    annual = df['strat_return'].mean() * 252\n    vol = df['strat_return'].std() * np.sqrt(252)\n    sharpe = annual / vol if vol > 0 else 0\n    \n    # Max drawdown\n    cum = (1 + df['strat_return']).cumprod()\n    dd = (cum - cum.cummax()) / cum.cummax()\n    max_dd = dd.min()\n    \n    return {'total': total, 'annual': annual, 'sharpe': sharpe, 'max_dd': max_dd}\n```"},
+{title:"Common Pitfalls to Avoid",content:"**The graveyard of quant strategies is full of backtesting mistakes.**\n\n**1. Look-Ahead Bias** (most common!)\nUsing future information in your signals.\n```python\n# WRONG: signal uses today's data to trade today\ndf['signal'] = np.where(df['return'] > 0, 1, -1)\n\n# RIGHT: signal uses yesterday's data to trade today\ndf['strat_return'] = df['signal'].shift(1) * df['return']\n```\n\n**2. Overfitting** (\"curve fitting\")\nOptimizing parameters until the backtest looks perfect — but it won't work on new data.\n```\nSMA(17.3) + RSI(13.7) + MACD(11,25,8) = \"amazing\" backtest\nBut this exact combination is fit to historical noise, not real patterns!\n```\n\n**3. Survivorship Bias**\nOnly testing on stocks that still exist. Failed companies are excluded, inflating results.\n\n**4. Ignoring Transaction Costs**\n```python\n# Include realistic costs\ncost_per_trade = 0.001  # 0.1% (slippage + commission)\ntrades = df['signal'].diff().abs() / 2  # Number of trades\ndf['strat_return'] -= trades * cost_per_trade\n```\n\n**5. Data Snooping (p-hacking)**\nTesting many strategies and reporting only the one that worked.\n\n**Marcos Lopez de Prado's advice:**\n\"The more backtests you run, the more likely you'll find a false positive. Use walk-forward testing and out-of-sample validation.\"\n\n[[[diagram:summary:ALWAYS shift signals by 1 to avoid look-ahead bias|||Overfitting: if you optimize too many parameters, you're fitting noise|||Survivorship bias: failed companies disappear from datasets|||Transaction costs (0.05-0.2% per trade) can kill high-frequency strategies|||Walk-forward testing: train on past, test on future, repeatedly|||If a strategy only works with very specific parameters, it's probably overfit]]]"}
+],
+exercises:[
+{title:"Shift Value",task:"What number do you shift signals by to avoid look-ahead bias?",starterCode:"# df['signal'].shift(?)\n",expectedOutput:"1",hint:"1 day delay",bestExplanation:"shift(1) delays the signal by 1 period. You can only act on information available before the trade.",solutions:[{label:"⭐ Best",code:"print(1)",best:true}]},
+{title:"Overfitting Sign",task:"Strategy works perfectly in backtest but fails live. This is likely? Print: overfitting",starterCode:"# Great backtest, terrible live results\n",expectedOutput:"overfitting",hint:"Fitted to historical noise",bestExplanation:"Overfitting means the model learned noise, not signal. Simple strategies with fewer parameters are more robust.",solutions:[{label:"⭐ Best",code:"print('overfitting')",best:true}]},
+{title:"Trading Cost Impact",task:"Return is 0.05% per day, cost is 0.1% per trade, 1 trade/day. Net return?",starterCode:"daily_return = 0.0005\ncost_per_trade = 0.001\n",expectedOutput:"-0.0005",hint:"Return minus cost",bestExplanation:"0.0005 - 0.001 = -0.0005. The strategy LOSES money after costs! This kills many high-frequency strategies.",solutions:[{label:"⭐ Best",code:"daily_return = 0.0005\ncost_per_trade = 0.001\nprint(daily_return - cost_per_trade)",best:true}]}
+]}
+]},
+
+// ═══ COURSE 6: Risk & Portfolio Management ═══
+// Based on: Carver (Systematic Trading), general risk
+{id:'risk-management',title:'Risk & Portfolio Management',icon:'🛡️',color:'#14b8a6',
+desc:'Position sizing, Kelly criterion, portfolio construction, drawdown control — survival is job #1 (Carver).',
+topics:[
+{id:6001,title:"Risk Management Fundamentals",icon:"⚖️",
+lessons:[
+{title:"Why Risk Management is Job #1",content:"**\"Rule #1: Don't lose money. Rule #2: Don't forget Rule #1.\"** — Warren Buffett\n\nThe math of losses is brutal and asymmetric:\n```\nLoss      | Recovery Needed\n──────────|────────────────\n-10%      | +11.1%\n-20%      | +25.0%\n-30%      | +42.9%\n-50%      | +100.0%\n-75%      | +300.0%\n-90%      | +900.0%\n```\n\n```python\ndef recovery_needed(loss_pct):\n    remaining = 1 - loss_pct / 100\n    return (1 / remaining - 1) * 100\n\nfor loss in [10, 20, 30, 50, 75, 90]:\n    print(f'-{loss}% loss → need +{recovery_needed(loss):.1f}%')\n```\n\n**Core risk rules (Carver):**\n1. **Never risk more than 1-2% of capital per trade**\n2. **Always use stop-losses**\n3. **Diversify across assets and strategies**\n4. **Size positions based on volatility, not conviction**\n5. **Know your max drawdown tolerance BEFORE you start**\n\n[[[diagram:position-sizing]]]"},
+{title:"Position Sizing Methods",content:"**Position sizing** = how much to buy. This is MORE important than entry signals.\n\n**1. Fixed Fractional (1-2% Rule):**\n```python\ndef position_size(capital, risk_pct, stop_loss_pct):\n    risk_amount = capital * risk_pct / 100\n    position = risk_amount / (stop_loss_pct / 100)\n    return position\n\n# $100K capital, 2% risk, 5% stop\npos = position_size(100000, 2, 5)  # = $40,000\n```\n\n**2. Kelly Criterion** (from gambling theory):\n\n[[[diagram:kelly-criterion]]]\n\n```python\n# Kelly Fraction = p - (1-p)/R\n# p = probability of winning\n# R = win/loss ratio (average win / average loss)\n\ndef kelly_fraction(win_rate, win_loss_ratio):\n    return win_rate - (1 - win_rate) / win_loss_ratio\n\n# Example: 55% win rate, wins 1.5× losses\nkelly = kelly_fraction(0.55, 1.5)  # = 0.25 (25%)\n# PRACTICAL: use HALF-Kelly (12.5%) for safety!\n```\n\n**3. Volatility-Based (Carver's method):**\n```python\n# Position = Target Risk / Asset Volatility\ntarget_daily_risk = capital * 0.002  # 0.2% of capital per day\nasset_daily_vol = price * daily_volatility  # Dollar vol per share\nshares = target_daily_risk / asset_daily_vol\n```\n\n[[[diagram:summary:Losses are asymmetric: -50% needs +100% to recover|||Never risk more than 1-2% of capital per trade|||Kelly Criterion gives optimal fraction, but use HALF-Kelly for safety|||Volatility-based sizing: riskier assets get smaller positions|||Position sizing matters MORE than entry signals|||Know your max drawdown tolerance before you start trading]]]"}
+],
+exercises:[
+{title:"Recovery Math",task:"Lost 50%. What % gain needed to recover? Print the number.",starterCode:"loss = 50\nremaining = 100 - loss\n",expectedOutput:"100.0",hint:"From $50 back to $100",bestExplanation:"$100 → $50 = 50% loss. $50 → $100 = 100% gain needed. This is why preventing large losses is critical!",solutions:[{label:"⭐ Best",code:"loss = 50\nremaining = 100 - loss\nprint((100 - remaining) / remaining * 100)",best:true}]},
+{title:"Position Size",task:"Capital=$50K, risk=2%, stop=4%. Print position size.",starterCode:"capital = 50000\nrisk_pct = 2\nstop_pct = 4\n",expectedOutput:"25000.0",hint:"(capital × risk%) / stop%",bestExplanation:"Position = (50000 × 0.02) / 0.04 = $25,000. If stock drops 4%, you lose $1,000 = 2% of capital.",solutions:[{label:"⭐ Best",code:"capital = 50000\nrisk_pct = 2\nstop_pct = 4\nposition = (capital * risk_pct / 100) / (stop_pct / 100)\nprint(position)",best:true}]},
+{title:"Kelly Fraction",task:"Win rate=60%, win/loss ratio=1.5. Print Kelly fraction.",starterCode:"p = 0.60\nR = 1.5\n",expectedOutput:"0.3333333333333333",hint:"p - (1-p)/R",bestExplanation:"Kelly = 0.6 - 0.4/1.5 = 0.333 (33%). But use HALF-Kelly (16.7%) in practice for safety.",solutions:[{label:"⭐ Best",code:"p = 0.60\nR = 1.5\nprint(p - (1 - p) / R)",best:true}]}
+]},
+
+{id:6002,title:"Portfolio Construction",icon:"📊",
+lessons:[
+{title:"Diversification & Correlation",content:"**\"Diversification is the only free lunch in finance.\"** — Harry Markowitz\n\n**Why diversify?**\nIf you put all your money in one stock and it drops 50%, you lose 50%. But if you hold 20 stocks and one drops 50%, you only lose 2.5%.\n\n**The key is CORRELATION:**\n```python\nimport numpy as np\n\n# Perfect correlation (+1): assets move together → no benefit\n# Zero correlation (0): independent → good diversification\n# Negative correlation (-1): move opposite → best diversification\n\n# Portfolio volatility with 2 assets:\ndef portfolio_vol(w1, vol1, vol2, corr):\n    w2 = 1 - w1\n    var = (w1*vol1)**2 + (w2*vol2)**2 + 2*w1*w2*vol1*vol2*corr\n    return var ** 0.5\n\n# Example: 50/50 split, both 20% vol\nprint(f'Corr +1.0: {portfolio_vol(0.5, 0.20, 0.20, 1.0):.1%}')   # 20%\nprint(f'Corr  0.0: {portfolio_vol(0.5, 0.20, 0.20, 0.0):.1%}')   # 14.1%\nprint(f'Corr -1.0: {portfolio_vol(0.5, 0.20, 0.20, -1.0):.1%}')  # 0%!\n```\n\n**Practical portfolio tips:**\n• Mix asset classes: stocks, bonds, commodities, FX\n• Mix strategies: trend + mean reversion + momentum\n• Mix timeframes: some short-term, some long-term\n• Rebalance periodically (monthly or quarterly)\n\n⚠️ **Warning:** Correlations INCREASE during crises. When you need diversification most, it works least!\n\n[[[diagram:summary:Diversification reduces risk without reducing expected return|||Correlation determines diversification benefit: lower = better|||Portfolio vol < individual asset vols when correlation < 1|||Mix asset classes, strategies, and timeframes|||Correlations spike during crises — diversification is imperfect|||Equal weight (1/N) often beats 'optimal' portfolios in practice]]]"}
+],
+exercises:[
+{title:"Diversification Benefit",task:"Two assets with correlation 0, equal weight, both 20% vol. Print portfolio vol rounded to 1 decimal.",starterCode:"import math\nw = 0.5\nvol = 0.20\ncorr = 0.0\n",expectedOutput:"14.1",hint:"sqrt(w1²σ1² + w2²σ2² + 2w1w2σ1σ2ρ)",bestExplanation:"Port vol = √(0.25×0.04 + 0.25×0.04 + 0) = √0.02 = 14.1%. Diversification reduced risk from 20% to 14.1%!",solutions:[{label:"⭐ Best",code:"import math\nw = 0.5\nvol = 0.20\ncorr = 0.0\nport_vol = math.sqrt((w*vol)**2 + (w*vol)**2 + 2*w*w*vol*vol*corr)\nprint(round(port_vol * 100, 1))",best:true}]},
+{title:"Best Correlation",task:"For maximum diversification, correlation should be? Print: negative",starterCode:"# Best for diversification\n",expectedOutput:"negative",hint:"Opposite movements = risk reduction",bestExplanation:"Negative correlation means when one goes down, the other goes up — maximum risk reduction. But true negative correlation is rare in practice.",solutions:[{label:"⭐ Best",code:"print('negative')",best:true}]}
+]}
+]},
+
+// ═══ COURSE 7: Machine Learning for Trading ═══
+// Based on: Lopez de Prado, Dixon et al.
+{id:'ml-trading',title:'Machine Learning for Trading',icon:'🤖',color:'#8b5cf6',
+desc:'Feature engineering, classification models, time-series CV — avoid the pitfalls of ML in finance (Lopez de Prado).',
+topics:[
+{id:7001,title:"ML Basics for Finance",icon:"🧠",
+lessons:[
+{title:"Why ML in Trading (And Why It's Hard)",content:"**Machine Learning** can find patterns in data that humans can't see. But applying ML to finance is uniquely challenging.\n\n[[[diagram:ml-pipeline]]]\n\n**Why ML is attractive for trading:**\n• Can process thousands of features simultaneously\n• Finds non-linear relationships\n• Adapts to changing markets (with retraining)\n• No emotional biases\n\n**Why ML is HARD in finance (Lopez de Prado):**\n\n1. **Low signal-to-noise ratio**: Markets are mostly noise, with tiny predictable signals\n2. **Non-stationarity**: Patterns change over time\n3. **Overfitting risk**: More features = more chances to find false patterns\n4. **Limited data**: 20 years = only ~5,000 daily observations\n5. **Survivorship bias**: Training data may be biased\n\n```python\n# The basic ML workflow for trading:\nfrom sklearn.ensemble import RandomForestClassifier\n\n# 1. Prepare features (X) and labels (y)\nX = df[['return_1d', 'return_5d', 'vol_20d', 'rsi', 'macd']]\ny = (df['return'].shift(-1) > 0).astype(int)  # 1=up, 0=down\n\n# 2. Split: NEVER use random split for time series!\ntrain = X.iloc[:int(len(X)*0.7)]\ntest = X.iloc[int(len(X)*0.7):]\n\n# 3. Train and predict\nmodel = RandomForestClassifier(n_estimators=100)\nmodel.fit(X_train, y_train)\npredictions = model.predict(X_test)\n```\n\n⚠️ **CRITICAL: Never use random train/test split on time series data!** Always split by time (train on past, test on future)."},
+{title:"Feature Engineering for Markets",content:"**Feature engineering** = creating informative inputs for your model. This is where the real skill lies.\n\n**Common features (from Dixon et al.):**\n\n```python\n# ── Price-based features ──\ndf['return_1d'] = df['Close'].pct_change(1)\ndf['return_5d'] = df['Close'].pct_change(5)\ndf['return_20d'] = df['Close'].pct_change(20)\n\n# ── Volatility features ──\ndf['vol_5d'] = df['return_1d'].rolling(5).std()\ndf['vol_20d'] = df['return_1d'].rolling(20).std()\ndf['vol_ratio'] = df['vol_5d'] / df['vol_20d']  # Vol regime\n\n# ── Technical features ──\ndf['rsi_14'] = calculate_rsi(df['Close'], 14)\ndf['macd'] = df['Close'].ewm(12).mean() - df['Close'].ewm(26).mean()\ndf['bb_position'] = (df['Close'] - df['Close'].rolling(20).mean()) / (df['Close'].rolling(20).std() * 2)\n\n# ── Volume features ──\ndf['vol_ma_ratio'] = df['Volume'] / df['Volume'].rolling(20).mean()\n\n# ── Label (what to predict) ──\n# Triple barrier method (Lopez de Prado):\n# Instead of just up/down, set:\n# +1 = hits profit target first\n# -1 = hits stop loss first  \n# 0 = neither (time expires)\n```\n\n**Lopez de Prado's key insights:**\n• Use **fractionally differentiated features** to maintain stationarity while preserving memory\n• Use **triple barrier labeling** instead of simple up/down\n• Use **meta-labeling**: first model predicts direction, second model predicts whether to trade\n• **Purge and embargo** to prevent information leakage between train/test\n\n[[[diagram:summary:Feature engineering is more important than model selection|||Never use random train/test split on time series — always split by time|||Common features: returns, volatility, RSI, MACD, volume ratios|||Triple barrier labeling (Lopez de Prado) > simple up/down labels|||Meta-labeling: train one model for direction, another for sizing|||More features ≠ better model. Feature importance matters.]]]"}
+],
+exercises:[
+{title:"Time Split",task:"For time series ML, use time-based split, never ___. Print the word.",starterCode:"# Never use ___ split for time series\n",expectedOutput:"random",hint:"Random shuffle breaks time order",bestExplanation:"Random splitting in time series causes data leakage — future information in training data. Always split by time.",solutions:[{label:"⭐ Best",code:"print('random')",best:true}]},
+{title:"Noise Ratio",task:"Finance has low signal-to-___ ratio. Print the missing word.",starterCode:"# Markets are mostly ___\n",expectedOutput:"noise",hint:"Most price moves are random",bestExplanation:"Financial markets have extremely low signal-to-noise ratio. Most price changes are noise, not predictable signal.",solutions:[{label:"⭐ Best",code:"print('noise')",best:true}]},
+{title:"Label Type",task:"Lopez de Prado recommends ___ barrier labeling. Print the missing word.",starterCode:"# Not just up/down, but ___?\n",expectedOutput:"triple",hint:"Profit target + stop loss + time",bestExplanation:"Triple barrier: profit target (upper), stop loss (lower), max holding time (vertical). Much better than binary up/down labels.",solutions:[{label:"⭐ Best",code:"print('triple')",best:true}]}
+]}
+]},
+
+// ═══ COURSE 8: Options & Advanced Topics ═══
+// Based on: Option Volatility & Pricing (Natenberg), High-Frequency Trading (Aldridge)
+{id:'options-advanced',title:'Options & Advanced Topics',icon:'⚡',color:'#ec4899',
+desc:'Options pricing, the Greeks, market microstructure, order flow — the bridge to professional quant trading.',
+topics:[
+{id:8001,title:"Introduction to Options",icon:"📋",
+lessons:[
+{title:"What Are Options?",content:"An **option** is a contract that gives you the **right (not obligation)** to buy or sell an asset at a specific price by a certain date.\n\nThink of it like a **reservation fee:**\n• You pay $5 to reserve the right to buy a house at $500K within 3 months\n• If house goes to $600K → exercise your option, profit $95K\n• If house drops to $400K → don't exercise, you only lose the $5 fee\n\n**Two types:**\n• **Call Option** 📈: Right to BUY at the strike price (profit when price goes UP)\n• **Put Option** 📉: Right to SELL at the strike price (profit when price goes DOWN)\n\n[[[diagram:option-payoff]]]\n\n**Key terms:**\n```\nStrike Price  = The agreed price you can buy/sell at\nPremium       = The cost of the option contract\nExpiration    = Deadline to exercise the option\nIn-the-money  = Option would be profitable if exercised now\nOut-of-money  = Option would NOT be profitable now\nAt-the-money  = Strike ≈ current price\n```\n\n**Why options matter for quants:**\n1. **Leverage** — control $10K of stock for $500\n2. **Hedging** — protect your portfolio from crashes\n3. **Income** — sell options to collect premium\n4. **Volatility trading** — bet on vol without predicting direction"},
+{title:"Option Pricing & The Greeks",content:"**How are options priced?** The Black-Scholes model (1973) — one of the most important equations in finance:\n\n```\nCall Price = S × N(d₁) - K × e^(-rT) × N(d₂)\n\nWhere:\nS = current stock price\nK = strike price  \nr = risk-free interest rate\nT = time to expiration (in years)\nσ = volatility (the KEY input!)\nN() = cumulative normal distribution\n```\n\n**The Greeks** measure option price sensitivity:\n\n[[[diagram:greeks-table]]]\n\n```python\n# Simplified Black-Scholes in Python\nimport math\nfrom scipy.stats import norm\n\ndef black_scholes_call(S, K, T, r, sigma):\n    d1 = (math.log(S/K) + (r + sigma**2/2)*T) / (sigma*math.sqrt(T))\n    d2 = d1 - sigma * math.sqrt(T)\n    call = S * norm.cdf(d1) - K * math.exp(-r*T) * norm.cdf(d2)\n    return call\n\n# Example: Stock=$100, Strike=$100, 30 days, r=5%, vol=25%\nprice = black_scholes_call(100, 100, 30/365, 0.05, 0.25)\nprint(f'Call price: ${price:.2f}')  # ~$3.28\n```\n\n**Implied Volatility (IV)** — the market's forecast of future volatility.\n• When you know the option price, you can reverse-engineer the volatility the market is pricing in\n• IV > Historical Vol → options are \"expensive\"\n• IV < Historical Vol → options are \"cheap\"\n\nAs Natenberg writes: \"Options are really about volatility, not direction.\"\n\n[[[diagram:summary:Options = right to buy (call) or sell (put) at a set price|||Premium = the cost of the option (your max loss as buyer)|||Black-Scholes: option price depends on S, K, T, r, σ (volatility)|||The Greeks: Delta (price), Gamma (acceleration), Theta (time), Vega (vol)|||Implied Volatility = the market's forecast of future volatility|||Natenberg: 'Options are really about volatility, not direction']]]"}
+],
+exercises:[
+{title:"Call vs Put",task:"Right to BUY at a set price = what type of option? Print it.",starterCode:"# Right to BUY = ?\n",expectedOutput:"call",hint:"Call = buy, Put = sell",bestExplanation:"Call = right to buy. Put = right to sell. Call profits when price rises. Put profits when price falls.",solutions:[{label:"⭐ Best",code:"print('call')",best:true}]},
+{title:"Option Cost",task:"The price you pay for an option is called the ___. Print it.",starterCode:"# Cost of the option contract\n",expectedOutput:"premium",hint:"Like an insurance premium",bestExplanation:"Premium is paid upfront by the option buyer. It's the maximum loss for the buyer and maximum gain for the seller.",solutions:[{label:"⭐ Best",code:"print('premium')",best:true}]},
+{title:"Key Input",task:"In Black-Scholes, what is THE most important input? Print: volatility",starterCode:"# The key variable in option pricing\n",expectedOutput:"volatility",hint:"σ (sigma)",bestExplanation:"Volatility (σ) is the key input because everything else (S, K, T, r) is observable. Volatility must be estimated — this is where option trading skill lies.",solutions:[{label:"⭐ Best",code:"print('volatility')",best:true}]}
+]},
+
+{id:8002,title:"Market Microstructure",icon:"🔬",
+lessons:[
+{title:"How Markets Really Work",content:"**Market microstructure** studies the actual mechanics of how trades happen — the order book, bid-ask spread, and execution.\n\n[[[diagram:order-book]]]\n\n**The Order Book:**\n• **Bids** (left): Buy orders waiting to be filled\n• **Asks** (right): Sell orders waiting to be filled\n• **Spread**: Difference between best ask and best bid\n• **Mid price**: Average of best bid and best ask\n\n**Order Types:**\n```\nMarket Order   → Execute immediately at best available price\n                 ✓ Guaranteed fill  ✗ Uncertain price\n\nLimit Order    → Execute only at specified price or better\n                 ✓ Price control    ✗ May not fill\n\nStop Order     → Becomes market order when price hits level\n                 Used for: stop-losses, breakout entries\n\nStop-Limit     → Becomes limit order when price hits level\n                 Combines stop trigger with price control\n```\n\n**Transaction Costs (Aldridge):**\n```python\n# Real costs of trading:\ncommission = 0.001       # 0.1% broker fee\nspread_cost = 0.0005     # Half the bid-ask spread\nslippage = 0.0005        # Price impact of your order\nmarket_impact = 0.001    # Moving the price against you\n\ntotal_cost = commission + spread_cost + slippage + market_impact\n# Typically 0.1% - 0.5% per round trip\n```\n\n**Why this matters for quants:**\n1. Transaction costs eat into strategy returns\n2. Large orders move the market against you\n3. Execution speed matters for high-frequency strategies\n4. The bid-ask spread is the cost of immediacy\n\n[[[diagram:summary:Order book: bids (buy) on left, asks (sell) on right|||Spread = best ask - best bid (cost of trading)|||Market orders = guaranteed fill, uncertain price|||Limit orders = price control, but may not fill|||Transaction costs: commission + spread + slippage + market impact|||For most retail quants: 0.1-0.5% per round trip is realistic]]]"}
+],
+exercises:[
+{title:"Bid-Ask Spread",task:"Best bid=$99.95, best ask=$100.05. Print the spread.",starterCode:"bid = 99.95\nask = 100.05\n",expectedOutput:"0.1",hint:"Ask minus Bid",bestExplanation:"Spread = 100.05 - 99.95 = $0.10. This is the cost of immediate execution — market makers profit from this.",solutions:[{label:"⭐ Best",code:"bid = 99.95\nask = 100.05\nprint(round(ask - bid, 2))",best:true}]},
+{title:"Mid Price",task:"Bid=$99.90, Ask=$100.10. Print the mid price.",starterCode:"bid = 99.90\nask = 100.10\n",expectedOutput:"100.0",hint:"Average of bid and ask",bestExplanation:"Mid = (99.90 + 100.10) / 2 = $100.00. The mid price is the 'fair' value — used for marking positions to market.",solutions:[{label:"⭐ Best",code:"bid = 99.90\nask = 100.10\nprint((bid + ask) / 2)",best:true}]},
+{title:"Order Type",task:"You want to buy ONLY at $50 or less. Which order type? Print: limit",starterCode:"# Buy only at specified price\n",expectedOutput:"limit",hint:"Price control",bestExplanation:"A limit order lets you specify the maximum price you'll pay. It won't fill if the market price is above your limit.",solutions:[{label:"⭐ Best",code:"print('limit')",best:true}]}
+]}
+]}
+];
+
+
+// ═══════════════════════════════════════════════
+// PYTHON SIMULATOR (same as original)
+// ═══════════════════════════════════════════════
+const simPython=(code)=>{
+  try{
+    const lines=code.split('\n');const out=[];const env={};
+    const ev=(expr,e)=>{
+      expr=expr.trim();
+      if(expr==='True')return true;if(expr==='False')return false;if(expr==='None')return null;
+      if(/^-?\d+$/.test(expr))return parseInt(expr);
+      if(/^-?\d+\.\d+$/.test(expr))return parseFloat(expr);
+      if((expr.startsWith("'")&&expr.endsWith("'"))||(expr.startsWith('"')&&expr.endsWith('"')))return expr.slice(1,-1);
+      if(expr.startsWith('[')&&expr.endsWith(']')){const inner=expr.slice(1,-1);if(!inner.trim())return[];return inner.split(',').map(x=>ev(x.trim(),e))}
+      if(expr.startsWith('{')&&expr.endsWith('}')){
+        const inner=expr.slice(1,-1).trim();if(!inner)return{};
+        if(!inner.includes(':')){const items=inner.split(',').map(x=>ev(x.trim(),e));return new Set(items)}
+        const obj={};const pairs=inner.split(',');
+        for(const p of pairs){const[k,v]=p.split(':');obj[ev(k.trim(),e)]=ev(v.trim(),e)}
+        return obj;
+      }
+      if(expr.startsWith('(')&&expr.endsWith(')')){const inner=expr.slice(1,-1);if(inner.includes(','))return inner.split(',').map(x=>ev(x.trim(),e));return ev(inner,e)}
+      if(expr.includes(' if ')&&expr.includes(' else ')){const m=expr.match(/(.+)\s+if\s+(.+)\s+else\s+(.+)/);if(m)return ev(m[2],e)?ev(m[1],e):ev(m[3],e)}
+      if(expr.includes(' and ')){const parts=expr.split(' and ');return parts.every(p=>ev(p.trim(),e))}
+      if(expr.includes(' or ')){const parts=expr.split(' or ');return parts.some(p=>ev(p.trim(),e))}
+      if(expr.startsWith('not ')){return !ev(expr.slice(4),e)}
+      if(expr.includes(' in ')){const[a,b]=expr.split(' in ');const av=ev(a.trim(),e);const bv=ev(b.trim(),e);if(Array.isArray(bv))return bv.includes(av);if(typeof bv==='string')return bv.includes(av);if(typeof bv==='object')return av in bv;return false}
+      if(e.hasOwnProperty(expr))return e[expr];
+      // f-string
+      if(expr.startsWith("f'")&&expr.endsWith("'")||expr.startsWith('f"')&&expr.endsWith('"')){
+        const s=expr.slice(2,-1);return s.replace(/\{([^}]+)\}/g,(_,x)=>{
+          const fm=x.match(/^(.+):(.+)$/);if(fm){const v=ev(fm[1],e);const fmt=fm[2];if(fmt.endsWith('%'))return(v*100).toFixed(parseInt(fmt)||0)+'%';if(fmt.includes('f'))return parseFloat(v).toFixed(parseInt(fmt.match(/\.(\d+)/)?.[1]||2));if(fmt.includes(','))return Number(v).toLocaleString();return String(v)}
+          const v=ev(x,e);return typeof v==='string'?v:pyStr(v);
+        });
+      }
+      // Arithmetic
+      const addSub=expr.match(/^(.+?)\s*([\+\-])\s*([^+\-].*)$/);
+      if(addSub){const l=ev(addSub[1],e);const r=ev(addSub[3],e);return addSub[2]==='+'?(typeof l==='string'?l+r:l+r):l-r}
+      const mulDiv=expr.match(/^(.+?)\s*([*/%])\s*(.+)$/);
+      if(mulDiv){const l=ev(mulDiv[1],e);const r=ev(mulDiv[3],e);if(mulDiv[2]==='*')return typeof l==='string'?l.repeat(r):l*r;if(mulDiv[2]==='/')return l/r;return l%r}
+      const pow=expr.match(/^(.+?)\s*\*\*\s*(.+)$/);
+      if(pow)return Math.pow(ev(pow[1],e),ev(pow[2],e));
+      // Method calls
+      const mc=expr.match(/^(.+)\.(\w+)\(([^)]*)\)$/);
+      if(mc){const obj=ev(mc[1],e);const meth=mc[2];const args=mc[3]?mc[3].split(',').map(a=>ev(a.trim(),e)):[];
+        if(typeof obj==='string'){if(meth==='upper')return obj.toUpperCase();if(meth==='lower')return obj.toLowerCase();if(meth==='strip'||meth==='trim')return obj.trim();if(meth==='split')return args[0]?obj.split(args[0]):obj.split(/\s+/);if(meth==='replace')return obj.replace(new RegExp(args[0],'g'),args[1]||'');if(meth==='startswith')return obj.startsWith(args[0]);if(meth==='endswith')return obj.endsWith(args[0]);if(meth==='count')return obj.split(args[0]).length-1;if(meth==='find')return obj.indexOf(args[0]);if(meth==='join')return args[0].join(obj);if(meth==='format')return obj.replace(/\{\}/g,()=>args.shift())}
+        if(Array.isArray(obj)){if(meth==='append'){obj.push(args[0]);return}if(meth==='pop')return obj.pop();if(meth==='sort'){obj.sort((a,b)=>a-b);return}if(meth==='reverse'){obj.reverse();return}if(meth==='index')return obj.indexOf(args[0]);if(meth==='count')return obj.filter(x=>x===args[0]).length;if(meth==='copy')return[...obj]}
+        if(typeof obj==='object'&&obj!==null){if(meth==='get')return obj.hasOwnProperty(args[0])?obj[args[0]]:(args[1]!==undefined?args[1]:null);if(meth==='keys')return Object.keys(obj);if(meth==='values')return Object.values(obj);if(meth==='items')return Object.entries(obj);if(meth==='update'){Object.assign(obj,args[0]);return}if(typeof obj[meth]==='function')return obj[meth](...args)}
+      }
+      // Property
+      const prop=expr.match(/^(.+)\.(\w+)$/);
+      if(prop){const obj=ev(prop[1],e);if(typeof obj==='string'&&prop[2]==='length')return obj.length;if(Array.isArray(obj)&&prop[2]==='length')return obj.length}
+      // Built-in functions
+      const fn_match=expr.match(/^(\w+)\((.+)\)$/);
+      if(fn_match){const fn=fn_match[1];const arg=ev(fn_match[2],e);
+        if(fn==='int')return parseInt(arg);if(fn==='float')return parseFloat(arg);if(fn==='str')return String(arg);if(fn==='bool')return!!arg;
+        if(fn==='len')return typeof arg==='string'?arg.length:(Array.isArray(arg)?arg.length:Object.keys(arg).length);
+        if(fn==='type'){if(typeof arg==='number')return Number.isInteger(arg)?"<class 'int'>":"<class 'float'>";if(typeof arg==='string')return"<class 'str'>";if(Array.isArray(arg))return"<class 'list'>";return"<class '"+typeof arg+"'>"}
+        if(fn==='min')return Array.isArray(arg)?Math.min(...arg):Math.min(...Object.values(arguments));
+        if(fn==='max')return Array.isArray(arg)?Math.max(...arg):Math.max(...Object.values(arguments));
+        if(fn==='sum')return Array.isArray(arg)?arg.reduce((a,b)=>a+b,0):0;
+        if(fn==='abs')return Math.abs(arg);if(fn==='round')return Math.round(arg);
+        if(fn==='sorted')return[...arg].sort((a,b)=>a-b);
+        if(fn==='list'){if(arg instanceof Set)return[...arg];return Array.isArray(arg)?[...arg]:[arg]}
+        if(fn==='set')return new Set(arg);
+        if(fn==='range'){if(typeof arg==='number'){const r=[];for(let i=0;i<arg;i++)r.push(i);return r}}
+      }
+      const rng=expr.match(/^range\((.+)\)$/);
+      if(rng){const args=rng[1].split(',').map(a=>ev(a.trim(),e));const r=[];if(args.length===1)for(let i=0;i<args[0];i++)r.push(i);else if(args.length===2)for(let i=args[0];i<args[1];i++)r.push(i);else if(args.length===3)for(let i=args[0];args[2]>0?i<args[1]:i>args[1];i+=args[2])r.push(i);return r}
+      const idx=expr.match(/^(.+)\[(.+)\]$/);
+      if(idx){const o=ev(idx[1],e);const i=ev(idx[2],e);return o[i<0?o.length+i:i]}
+      if(expr.includes('==')){const[a,b]=expr.split('==');return ev(a,e)===ev(b,e)}
+      if(expr.includes('!=')){const[a,b]=expr.split('!=');return ev(a,e)!==ev(b,e)}
+      if(expr.includes('>=')){const[a,b]=expr.split('>=');return ev(a,e)>=ev(b,e)}
+      if(expr.includes('<=')){const[a,b]=expr.split('<=');return ev(a,e)<=ev(b,e)}
+      if(expr.includes('>')&&!expr.includes('>=')){const[a,b]=expr.split('>');return ev(a,e)>ev(b,e)}
+      if(expr.includes('<')&&!expr.includes('<=')){const[a,b]=expr.split('<');return ev(a,e)<ev(b,e)}
+      return expr;
+    };
+    const pyStr=(v)=>{
+      if(v===null||v===undefined)return'None';if(v===true)return'True';if(v===false)return'False';
+      if(Array.isArray(v))return'['+v.map(x=>typeof x==='string'?"'"+x+"'":pyStr(x)).join(', ')+']';
+      if(v instanceof Set)return'{'+[...v].map(x=>typeof x==='string'?"'"+x+"'":pyStr(x)).join(', ')+'}';
+      if(typeof v==='object')return'{'+Object.entries(v).map(([k,val])=>(typeof k==='string'?"'"+k+"'":k)+': '+(typeof val==='string'?"'"+val+"'":pyStr(val))).join(', ')+'}';
+      return String(v);
+    };
+    const run=(lines,e,depth=0)=>{
+      let i=0;while(i<lines.length){
+        const line=lines[i];const trimmed=line.trim();if(!trimmed){i++;continue}
+        const pr=trimmed.match(/^print\((.+)\)$/s);
+        if(pr){
+          const args=[];let arg='';let paren=0;let inStr=false;let strCh='';
+          for(const ch of pr[1]){if(!inStr&&(ch==="'"||ch==='"')){inStr=true;strCh=ch;arg+=ch}else if(inStr&&ch===strCh){inStr=false;arg+=ch}else if(!inStr&&ch==='('){paren++;arg+=ch}else if(!inStr&&ch===')'){paren--;arg+=ch}else if(!inStr&&ch===','&&paren===0){args.push(arg.trim());arg=''}else{arg+=ch}}
+          if(arg.trim())args.push(arg.trim());
+          const vals=args.map(a=>ev(a,e));out.push(vals.map(v=>typeof v==='string'?v:pyStr(v)).join(' '));i++;continue;
+        }
+        const fl=trimmed.match(/^for\s+(\w+)\s+in\s+(.+):$/);
+        if(fl){const varN=fl[1];const iter=ev(fl[2],e);const body=[];i++;while(i<lines.length&&(lines[i].startsWith('    ')||lines[i].startsWith('\t'))){body.push(lines[i].replace(/^    /,'').replace(/^\t/,''));i++}if(Array.isArray(iter)||typeof iter==='string'){for(const item of iter){e[varN]=item;run(body,e,depth+1)}}continue;}
+        const wl=trimmed.match(/^while\s+(.+):$/);
+        if(wl){const body=[];i++;while(i<lines.length&&(lines[i].startsWith('    ')||lines[i].startsWith('\t'))){body.push(lines[i].replace(/^    /,'').replace(/^\t/,''));i++}let safety=1000;while(ev(wl[1],e)&&safety-->0){run(body,e,depth+1)}continue;}
+        const ifm=trimmed.match(/^if\s+(.+):$/);
+        if(ifm){const branches=[];const body=[];i++;while(i<lines.length&&(lines[i].startsWith('    ')||lines[i].startsWith('\t'))){body.push(lines[i].replace(/^    /,'').replace(/^\t/,''));i++}branches.push({cond:ifm[1],body:[...body]});while(i<lines.length){const el=lines[i].trim().match(/^elif\s+(.+):$/);if(el){const b2=[];i++;while(i<lines.length&&(lines[i].startsWith('    ')||lines[i].startsWith('\t'))){b2.push(lines[i].replace(/^    /,'').replace(/^\t/,''));i++}branches.push({cond:el[1],body:b2});continue}if(lines[i].trim()==='else:'){const b2=[];i++;while(i<lines.length&&(lines[i].startsWith('    ')||lines[i].startsWith('\t'))){b2.push(lines[i].replace(/^    /,'').replace(/^\t/,''));i++}branches.push({cond:'True',body:b2});continue}break;}for(const br of branches){if(ev(br.cond,e)){run(br.body,e,depth+1);break}}continue;}
+        if(trimmed.startsWith('def ')){const dm=trimmed.match(/^def\s+(\w+)\(([^)]*)\):$/);if(dm){const fname=dm[1];const params=dm[2].split(',').map(p=>p.trim()).filter(Boolean);const body=[];i++;while(i<lines.length&&(lines[i].startsWith('    ')||lines[i].startsWith('\t'))){body.push(lines[i].replace(/^    /,'').replace(/^\t/,''));i++}e[fname]=(...args)=>{const le={...e};params.forEach((p,idx)=>{const[pn,pd]=p.split('=');le[pn.trim()]=idx<args.length?args[idx]:(pd?ev(pd.trim(),le):undefined)});let ret;for(const bl of body){const rt=bl.trim().match(/^return\s+(.+)$/);if(rt){ret=ev(rt[1],le);break}const fp=bl.trim().match(/^print\((.+)\)$/s);if(fp){const v=ev(fp[1],le);out.push(typeof v==='string'?v:pyStr(v));continue}const fa=bl.trim().match(/^(\w+)\s*=\s*(.+)$/);if(fa){le[fa[1]]=ev(fa[2],le)}}return ret};continue;}}
+        if(trimmed.startsWith('import ')||trimmed.startsWith('from ')){i++;continue}
+        if(trimmed==='try:'){const tbody=[];i++;while(i<lines.length&&(lines[i].startsWith('    ')||lines[i].startsWith('\t'))&&!lines[i].trim().startsWith('except')){tbody.push(lines[i].replace(/^    /,'').replace(/^\t/,''));i++}const ecatch=lines[i]?.trim().match(/^except\s*(.*):$/);const ebody=[];if(ecatch){i++;while(i<lines.length&&(lines[i].startsWith('    ')||lines[i].startsWith('\t'))){ebody.push(lines[i].replace(/^    /,'').replace(/^\t/,''));i++}}try{run(tbody,e,depth+1)}catch(err){run(ebody,e,depth+1)}continue;}
+        if(trimmed.startsWith('raise ')){const rm=trimmed.match(/^raise\s+(\w+)\((.+)\)$/);if(rm)throw new Error(ev(rm[2],e));i++;continue;}
+        const aug=trimmed.match(/^(\w+)\s*([\+\-\*\/])=\s*(.+)$/);
+        if(aug){const cur=e[aug[1]]||0;const val=ev(aug[3],e);if(aug[2]==='+')e[aug[1]]=typeof cur==='string'?cur+val:cur+val;else if(aug[2]==='-')e[aug[1]]=cur-val;else if(aug[2]==='*')e[aug[1]]=cur*val;else if(aug[2]==='/')e[aug[1]]=cur/val;i++;continue}
+        const asg=trimmed.match(/^(\w+)\s*=\s*(.+)$/);
+        if(asg){e[asg[1]]=ev(asg[2],e);i++;continue}
+        const da=trimmed.match(/^(\w+)\[(.+)\]\s*=\s*(.+)$/);
+        if(da){const o=e[da[1]];const k=ev(da[2],e);o[k]=ev(da[3],e);i++;continue}
+        const mc2=trimmed.match(/^(\w+)\.(\w+)\((.*)?\)$/);
+        if(mc2){const obj=e[mc2[1]];const meth=mc2[2];const args=mc2[3]?[ev(mc2[3],e)]:[];if(Array.isArray(obj)&&meth==='append')obj.push(args[0]);if(typeof obj==='object'&&obj&&typeof obj[meth]==='function')obj[meth](...args);i++;continue}
+        const fca=trimmed.match(/^(\w+)\s*=\s*(\w+)\(([^)]*)\)$/);
+        if(fca&&typeof e[fca[2]]==='function'){const args=fca[3]?fca[3].split(',').map(a=>ev(a.trim(),e)):[];e[fca[1]]=e[fca[2]](...args);i++;continue}
+        const bfc=trimmed.match(/^(\w+)\((.*)?\)$/);
+        if(bfc&&typeof e[bfc[1]]==='function'){const args=bfc[2]?bfc[2].split(',').map(a=>ev(a.trim(),e)):[];e[bfc[1]](...args);i++;continue}
+        if(trimmed.includes('.')&&trimmed.includes('(')){try{ev(trimmed,e)}catch{}i++;continue}
+        i++;
+      }
+    };
+    run(lines,env);return out.join('\n');
+  }catch(err){return null;}
+};
+
+const offlineTips=(userCode,exercise)=>{
+  const best=exercise.solutions.find(s=>s.best);if(!best)return'';
+  const uc=userCode.trim();const bc=best.code.trim();if(uc===bc)return'';
+  const tips=[];
+  if(!uc)tips.push('Write some code to solve the exercise.');
+  else if(!uc.includes('print'))tips.push('Don\'t forget to print() your result.');
+  return tips.join(' ');
+};
+
+
+// ═══════════════════════════════════════════════
+// MAIN APP COMPONENT
+// ═══════════════════════════════════════════════
+const App=()=>{
+  const[lang,setLang]=useState(()=>localStorage.getItem('ql-lang')||'en');
+  const[cIdx,setCIdx]=useState(null);
+  const[cT,setCT]=useState(0);
+  const[cE,setCE]=useState(0);
+  const[tab,setTab]=useState('learn');
+  const[lIdx,setLIdx]=useState(0);
+  const[code,setCode]=useState('');
+  const[output,setOutput]=useState('');
+  const[hint,setHint]=useState('');
+  const[showSol,setShowSol]=useState(false);
+  const[solIdx,setSolIdx]=useState(0);
+  const[done,setDone]=useState(()=>JSON.parse(localStorage.getItem('ql-done')||'{}'));
+  const[apiKey,setApiKey]=useState(getKey());
+  const[keyInput,setKeyInput]=useState('');
+  const[showSettings,setShowSettings]=useState(false);
+  const[chatOn,setChatOn]=useState(false);
+  const[msgs,setMsgs]=useState([]);
+  const[chatIn,setChatIn]=useState('');
+  const[chatLD,setChatLD]=useState(false);
+  const[showEn,setShowEn]=useState(true);
+  const[transCache,setTransCache]=useState({});
+  const[transing,setTransing]=useState(false);
+  const chatRef=useRef(null);
+
+  useEffect(()=>{localStorage.setItem('ql-lang',lang)},[lang]);
+  useEffect(()=>{localStorage.setItem('ql-done',JSON.stringify(done))},[done]);
+  useEffect(()=>{chatRef.current?.scrollIntoView({behavior:'smooth'})},[msgs]);
+
+  const ui=UI[lang]||UI.en;
+  const course=cIdx!==null?COURSES[cIdx]:null;
+  const topics=course?.topics||[];
+  const topic=topics[cT];
+  const ex=topic?.exercises?.[cE];
+  const courseColor=course?.color||'#10b981';
+
+  useEffect(()=>{if(ex)setCode(ex.starterCode||'')},[cE,cT,cIdx]);
+
+  const markDone=(topicId,exIdx)=>{const k=`${topicId}-${exIdx}`;setDone(d=>({...d,[k]:true}))};
+  const isDone=(topicId,exIdx)=>!!done[`${topicId}-${exIdx}`];
+  const tProg=(ti)=>{const t=topics[ti];if(!t?.exercises?.length)return 0;const d=t.exercises.filter((_,i)=>isDone(t.id,i)).length;return d/t.exercises.length};
+  const oProg=()=>{if(!topics.length)return 0;return topics.reduce((s,_,i)=>s+tProg(i),0)/topics.length};
+
+  const runCode=()=>{
+    setShowSol(false);setHint('');
+    const result=simPython(code);
+    if(result!==null){
+      setOutput(result);
+      if(ex&&result.trim()===ex.expectedOutput?.trim()){markDone(topic.id,cE);setOutput(ui.correct+'\n'+result)}
+      else if(ex){const tip=offlineTips(code,ex);setOutput(ui.wrong+'\n'+ui.yourOut+': '+result+(ex.expectedOutput?'\n'+ui.expected+': '+ex.expectedOutput:'')+(tip?'\n'+ui.tip+' '+tip:''))}
+    }else{setOutput('Could not simulate. Use the hint button!')}
+  };
+
+  const saveKey=()=>{if(keyInput.trim()){localStorage.setItem('ql-api-key',keyInput.trim());setApiKey(keyInput.trim());setShowSettings(false)}};
+  const clearKey=()=>{localStorage.removeItem('ql-api-key');setApiKey('');setKeyInput('')};
+
+  const chat=async()=>{
+    if(!chatIn.trim()||chatLD)return;const m=chatIn.trim();setChatIn('');setChatLD(true);
+    setMsgs(p=>[...p,{role:'user',content:m}]);
+    try{
+      const ctx=`You are a helpful quantitative trading tutor. The student is learning quantitative trading with Python. Current topic: ${topic?.title}.${tab==='practice'&&ex?` Current exercise: ${ex?.title} — ${ex?.task}. Their code:\n\`\`\`python\n${code}\n\`\`\`` : tab==='learn'?` Currently reading lesson: ${topic?.lessons?.[lIdx]?.title}.`:''}\nAnswer in ${LANGS.find(l=>l.code===lang)?.label||'English'}. Be concise, helpful, encouraging. If they're stuck on an exercise, give a small hint, not the full answer.`;
+      const res=await callAPI({model:'claude-sonnet-4-20250514',max_tokens:500,system:ctx,messages:[...msgs,{role:'user',content:m}].map(({role,content})=>({role,content}))});
+      const reply=res.content?.[0]?.text||ui.fail;
+      setMsgs(p=>[...p,{role:'assistant',content:reply}]);
+    }catch{setMsgs(p=>[...p,{role:'assistant',content:ui.fail}])}
+    setChatLD(false);
+  };
+
+  // ── Dynamic content translation via API ──
+  const translateText=async(text,key)=>{
+    if(!text||lang==='en'||!apiKey)return text;
+    const ck=`${lang}:${key}`;
+    if(transCache[ck])return transCache[ck];
+    setTransing(true);
+    try{
+      const langName=LANGS.find(l=>l.code===lang)?.label||lang;
+      const res=await callAPI({model:'claude-sonnet-4-20250514',max_tokens:2000,system:`You are a translator. Translate the following educational content about quantitative trading from English to ${langName}. Keep all code blocks, variable names, function names, and technical terms (like pandas, numpy, matplotlib, yfinance, OHLCV, SMA, EMA, RSI, MACD, Sharpe ratio etc.) in English. Keep markdown formatting intact. Only output the translation, nothing else.`,messages:[{role:'user',content:text}]});
+      const translated=res.content?.[0]?.text||text;
+      setTransCache(c=>({...c,[ck]:translated}));
+      setTransing(false);
+      return translated;
+    }catch{setTransing(false);return text}
+  };
+
+  const[transLesson,setTransLesson]=useState('');
+  const[transExTask,setTransExTask]=useState('');
+  const[transExTitle,setTransExTitle]=useState('');
+
+  // Auto-translate lesson content when language/lesson changes
+  useEffect(()=>{
+    setTransLesson('');setTransExTask('');setTransExTitle('');
+    if(lang==='en'||!apiKey)return;
+    const lesson=topic?.lessons?.[lIdx];
+    if(lesson&&tab==='learn'){
+      translateText(lesson.content,`lesson-${cIdx}-${cT}-${lIdx}`).then(t=>{if(t!==lesson.content)setTransLesson(t)});
+    }
+    if(ex&&tab==='practice'){
+      translateText(ex.task,`task-${cIdx}-${cT}-${cE}`).then(t=>{if(t!==ex.task)setTransExTask(t)});
+      translateText(ex.title,`extitle-${cIdx}-${cT}-${cE}`).then(t=>{if(t!==ex.title)setTransExTitle(t)});
+    }
+  },[lang,lIdx,cT,cIdx,cE,tab,apiKey]);
+
+  // Helper: get translated course/topic text or fallback to English
+  const tt=(key,fallback)=>preT(key,lang)||fallback;
+
+  const renderContent=(text)=>{
+    if(!text)return null;
+    const parts=text.split(/(\[\[\[diagram:[^\]]+\]\]\]|```[\s\S]*?```|\*\*[^*]+\*\*|`[^`]+`|\n)/);
+    return parts.map((p,i)=>{
+      if(p.startsWith('[[[diagram:')){
+        const inner=p.slice(11,-3);
+        if(inner.startsWith('summary:')){const items=inner.slice(8).split('|||');return <DiagramSummary key={i} items={items}/>}
+        const D=Diagrams[inner];return D?<D key={i}/>:null;
+      }
+      if(p.startsWith('```')){const lines=p.split('\n');const code=lines.slice(1,-1).join('\n');return <pre key={i} style={{background:'#0a0f1e',borderRadius:8,padding:14,margin:'12px 0',overflowX:'auto',fontSize:12,fontFamily:'"Fira Code",monospace',lineHeight:1.6,border:'1px solid #1e293b',color:'#e2e8f0'}}>{code}</pre>}
+      if(p.startsWith('**')&&p.endsWith('**'))return <strong key={i} style={{color:'#f1f5f9'}}>{p.slice(2,-2)}</strong>;
+      if(p.startsWith('`')&&p.endsWith('`'))return <code key={i} style={{background:'rgba(16,185,129,0.15)',color:'#6ee7b7',padding:'2px 6px',borderRadius:4,fontSize:'0.9em',fontFamily:'monospace'}}>{p.slice(1,-1)}</code>;
+      if(p==='\n')return <br key={i}/>;
+      if(p.startsWith('• '))return <div key={i} style={{paddingLeft:16,position:'relative',marginBottom:2}}><span style={{position:'absolute',left:4,color:'#10b981'}}>•</span>{p.slice(2)}</div>;
+      return <span key={i}>{p}</span>;
+    });
+  };
+
+  const C={
+    btn:{padding:'8px 16px',borderRadius:8,border:'none',cursor:'pointer',fontWeight:600,fontSize:13,color:'#fff',transition:'all 0.2s'},
+    btn2:{padding:'8px 16px',borderRadius:8,border:'1px solid #334155',cursor:'pointer',fontWeight:500,fontSize:13,color:'#94a3b8',background:'transparent'},
+    card:{background:'rgba(16,24,48,0.6)',borderRadius:12,border:'1px solid #1e293b',padding:16,cursor:'pointer',transition:'all 0.3s'},
+    fb:{display:'flex',alignItems:'center',justifyContent:'space-between'},
+    fc:{display:'flex',alignItems:'center'},
+    ed:{width:'100%',minHeight:180,background:'#0a0f1e',color:'#e2e8f0',fontFamily:'"Fira Code",monospace',fontSize:13,padding:14,borderRadius:8,border:'1px solid #1e293b',outline:'none',resize:'vertical',lineHeight:1.6,tabSize:4}
+  };
+
+  // ─── COURSE LIST PAGE ───
+  if(cIdx===null)return(<div style={{maxWidth:1100,margin:'0 auto',padding:'20px 16px'}}>
+    {/* Header */}
+    <div style={{textAlign:'center',padding:'40px 0 30px'}}>
+      <div style={{fontSize:48,marginBottom:8}}>📈</div>
+      <h1 style={{fontSize:28,fontWeight:800,background:'linear-gradient(135deg,#10b981,#60a5fa)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',marginBottom:8}}>QuantLingo</h1>
+      <p style={{color:'#94a3b8',fontSize:14}}>8 courses · 20+ topics · 60+ exercises — from zero to quant trader</p>
+      <div style={{display:'flex',gap:8,justifyContent:'center',marginTop:16,flexWrap:'wrap'}}>
+        {LANGS.map(l=><button key={l.code} onClick={()=>setLang(l.code)} style={{padding:'4px 10px',borderRadius:6,border:lang===l.code?'2px solid #10b981':'1px solid #1e293b',background:lang===l.code?'rgba(16,185,129,0.15)':'transparent',color:lang===l.code?'#6ee7b7':'#64748b',cursor:'pointer',fontSize:12}}>{l.flag} {l.label}</button>)}
+        <button onClick={()=>{setKeyInput(apiKey);setShowSettings(true)}} style={{padding:'4px 10px',borderRadius:6,border:'1px solid #1e293b',background:'transparent',color:apiKey?'#10b981':'#64748b',cursor:'pointer',fontSize:12}}>{apiKey?'🔑 API ✓':'⚙️ API Key'}</button>
+      </div>
+    </div>
+
+    {/* Course Cards */}
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:16}}>
+      {COURSES.map((c,i)=>{
+        const prog=cIdx===i?oProg():0;
+        return <div key={c.id} onClick={()=>{setCIdx(i);setCT(0);setCE(0);setTab('learn');setLIdx(0)}} style={{...C.card,borderColor:c.color+'30',position:'relative',overflow:'hidden'}}>
+          <div style={{position:'absolute',top:0,left:0,right:0,height:3,background:c.color,opacity:0.6}}/>
+          <div style={{fontSize:32,marginBottom:8}}>{c.icon}</div>
+          <h3 style={{color:'#f1f5f9',fontSize:16,fontWeight:700,marginBottom:6}}>{tt(`c:${i}:title`,c.title)}</h3>
+          <p style={{color:'#94a3b8',fontSize:12,lineHeight:1.5,marginBottom:12}}>{tt(`c:${i}:desc`,c.desc)}</p>
+          <div style={{display:'flex',alignItems:'center',gap:8}}>
+            <div style={{flex:1,height:4,background:'#1e293b',borderRadius:2,overflow:'hidden'}}>
+              <div style={{width:0+'%',height:'100%',background:c.color,borderRadius:2}}/>
+            </div>
+            <span style={{color:'#64748b',fontSize:11}}>{c.topics.length} topics</span>
+          </div>
+        </div>
+      })}
+    </div>
+
+    {/* Settings Modal */}
+    {showSettings&&<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.7)',zIndex:60,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={e=>e.target===e.currentTarget&&setShowSettings(false)}>
+      <div style={{background:'#0a0f1e',borderRadius:16,border:'1px solid #1e3a5f',padding:24,maxWidth:460,width:'100%',boxShadow:'0 12px 40px rgba(0,0,0,0.6)'}}>
+        <div style={{...C.fb,marginBottom:20}}><h3 style={{fontSize:18,fontWeight:700,color:'#f1f5f9'}}>⚙️ API Key Settings</h3><button onClick={()=>setShowSettings(false)} style={{background:'none',border:'none',color:'#64748b',cursor:'pointer',fontSize:20}}>×</button></div>
+        <p style={{color:'#94a3b8',fontSize:13,marginBottom:16,lineHeight:1.6}}>
+          {lang==='zh'?'输入你的 Anthropic API Key 来启用 AI 导师和内容翻译。':'Enter your Anthropic API Key to enable AI Tutor and content translation.'}
+          <br/><a href="https://console.anthropic.com/" target="_blank" style={{color:'#10b981'}}>→ console.anthropic.com</a>
+          <br/><span style={{color:'#64748b',fontSize:11}}>{lang==='zh'?'Key 仅存储在你的浏览器中，不会发送到任何服务器。':'Key is stored only in your browser.'}</span>
+        </p>
+        <div style={{display:'flex',gap:8,marginBottom:12}}>
+          <input type="password" value={keyInput} onChange={e=>setKeyInput(e.target.value)} placeholder="sk-ant-..." onKeyDown={e=>{if(e.key==='Enter')saveKey()}} style={{flex:1,background:'#111827',color:'#e2e8f0',fontSize:13,padding:'10px 14px',borderRadius:8,border:'1px solid #1e293b',outline:'none',fontFamily:'monospace'}}/>
+          <button onClick={saveKey} disabled={!keyInput.trim()} style={{...C.btn,padding:'10px 18px',background:'#10b981',opacity:keyInput.trim()?1:0.4}}>Save</button>
+        </div>
+        {apiKey&&<div style={{...C.fc,gap:8}}>
+          <span style={{color:'#10b981',fontSize:12}}>✓ Key saved: {apiKey.slice(0,12)}...</span>
+          <button onClick={clearKey} style={{color:'#f87171',fontSize:12,background:'none',border:'none',cursor:'pointer',textDecoration:'underline'}}>Remove</button>
+        </div>}
+      </div>
+    </div>}
+  </div>);
+
+  // ─── COURSE VIEW ───
+  return(<div style={{maxWidth:1100,margin:'0 auto',padding:'12px 16px'}}>
+    {/* Top nav */}
+    <div style={{...C.fb,marginBottom:16,flexWrap:'wrap',gap:8}}>
+      <button onClick={()=>setCIdx(null)} style={{...C.btn2,display:'flex',alignItems:'center',gap:6}}><I n="Left" s={14}/>{ui.back}</button>
+      <div style={{...C.fc,gap:8}}>
+        <select value={lang} onChange={e=>setLang(e.target.value)} style={{background:'#111827',color:'#e2e8f0',border:'1px solid #1e293b',borderRadius:6,padding:'4px 8px',fontSize:12}}>
+          {LANGS.map(l=><option key={l.code} value={l.code}>{l.flag} {l.label}</option>)}
+        </select>
+        <button onClick={()=>{setKeyInput(apiKey);setShowSettings(true)}} style={{background:'none',border:'1px solid #1e293b',borderRadius:6,padding:'4px 8px',color:apiKey?'#10b981':'#64748b',cursor:'pointer',fontSize:12}}>
+          {apiKey?'🔑':'⚙️'}
+        </button>
+      </div>
+    </div>
+
+    {/* Course header */}
+    <div style={{marginBottom:16,padding:16,borderRadius:12,background:`linear-gradient(135deg,${courseColor}15,${courseColor}05)`,border:`1px solid ${courseColor}30`}}>
+      <div style={{...C.fc,gap:12}}>
+        <span style={{fontSize:28}}>{course.icon}</span>
+        <div>
+          <h2 style={{color:'#f1f5f9',fontSize:18,fontWeight:700}}>{tt(`c:${cIdx}:title`,course.title)}</h2>
+          <p style={{color:'#94a3b8',fontSize:12}}>{tt(`c:${cIdx}:desc`,course.desc)}</p>
+        </div>
+      </div>
+      {/* Progress */}
+      <div style={{marginTop:12,display:'flex',alignItems:'center',gap:8}}>
+        <div style={{flex:1,height:4,background:'#1e293b',borderRadius:2,overflow:'hidden'}}>
+          <div style={{width:oProg()*100+'%',height:'100%',background:courseColor,borderRadius:2,transition:'width 0.5s'}}/>
+        </div>
+        <span style={{color:'#64748b',fontSize:11}}>{Math.round(oProg()*100)}%</span>
+      </div>
+    </div>
+
+    {/* Topic selector */}
+    <div style={{display:'flex',gap:6,overflowX:'auto',paddingBottom:8,marginBottom:16}}>
+      {topics.map((t,i)=>{const p=tProg(i);return <button key={t.id} onClick={()=>{setCT(i);setCE(0);setTab('learn');setLIdx(0)}} style={{flexShrink:0,padding:'8px 14px',borderRadius:8,border:cT===i?`2px solid ${courseColor}`:'1px solid #1e293b',background:cT===i?courseColor+'20':'transparent',color:cT===i?'#f1f5f9':'#94a3b8',cursor:'pointer',fontSize:12,fontWeight:cT===i?600:400,display:'flex',alignItems:'center',gap:6}}>
+        <span>{t.icon}</span>
+        <span>{tt(`t:${cIdx}:${i}:title`,t.title)}</span>
+        {p>=1&&<span style={{color:'#10b981'}}>✓</span>}
+      </button>})}
+    </div>
+
+    {/* Tabs */}
+    {topic&&<div style={{display:'flex',gap:4,marginBottom:16}}>
+      {['learn','practice'].map(t=><button key={t} onClick={()=>setTab(t)} style={{padding:'8px 20px',borderRadius:8,border:'none',cursor:'pointer',background:tab===t?courseColor:'transparent',color:tab===t?'#fff':'#64748b',fontWeight:600,fontSize:13,transition:'all 0.2s'}}>{t==='learn'?ui.learn:ui.practice}</button>)}
+    </div>}
+
+    {/* Learn tab */}
+    {topic&&tab==='learn'&&<main>
+      {/* Lesson nav */}
+      <div style={{display:'flex',gap:4,marginBottom:16,flexWrap:'wrap'}}>
+        {topic.lessons.map((l,i)=><button key={i} onClick={()=>setLIdx(i)} style={{padding:'6px 14px',borderRadius:6,border:lIdx===i?`1px solid ${courseColor}`:'1px solid #1e293b',background:lIdx===i?courseColor+'15':'transparent',color:lIdx===i?'#f1f5f9':'#94a3b8',cursor:'pointer',fontSize:12}}>{l.title}</button>)}
+      </div>
+      {/* Lesson content */}
+      <div style={{background:'rgba(16,24,48,0.4)',borderRadius:12,border:'1px solid #1e293b',padding:20,lineHeight:1.8,fontSize:14,color:'#cbd5e1'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+          <h3 style={{color:'#f1f5f9',fontSize:18,fontWeight:700}}>{topic.lessons[lIdx]?.title}</h3>
+          <div style={{display:'flex',gap:6}}>
+            {lang!=='en'&&apiKey&&<button onClick={()=>setShowEn(!showEn)} style={{padding:'4px 10px',borderRadius:6,border:'1px solid #1e293b',background:showEn?'rgba(16,185,129,0.15)':'transparent',color:showEn?'#6ee7b7':'#64748b',cursor:'pointer',fontSize:11}}>{showEn?ui.hideEn:ui.showEn}</button>}
+            <button onClick={()=>setChatOn(true)} style={{padding:'4px 10px',borderRadius:6,border:'1px solid #1e293b',background:'transparent',color:courseColor,cursor:'pointer',fontSize:11,display:'flex',alignItems:'center',gap:4}}><I n="Chat" s={12}/> {ui.tutor}</button>
+          </div>
+        </div>
+        {transing&&<div style={{padding:8,borderRadius:6,background:'rgba(251,191,36,0.1)',border:'1px solid rgba(251,191,36,0.2)',color:'#fbbf24',fontSize:12,marginBottom:12,textAlign:'center'}} className="pulse">{ui.transing}</div>}
+        {lang!=='en'&&transLesson&&<div style={{marginBottom:16,paddingBottom:16,borderBottom:'1px solid #1e293b'}}>
+          {renderContent(transLesson)}
+        </div>}
+        {(lang==='en'||(showEn&&lang!=='en'))&&<div style={{opacity:lang!=='en'?0.6:1}}>
+          {lang!=='en'&&<div style={{color:'#64748b',fontSize:11,marginBottom:8}}>🇬🇧 English Original:</div>}
+          {renderContent(topic.lessons[lIdx]?.content)}
+        </div>}
+        {lang!=='en'&&!transLesson&&!transing&&!apiKey&&<div>{renderContent(topic.lessons[lIdx]?.content)}</div>}
+      </div>
+      {/* Nav buttons */}
+      <div style={{marginTop:16,display:'flex',justifyContent:'space-between'}}>
+        <button onClick={()=>lIdx>0&&setLIdx(lIdx-1)} disabled={lIdx===0} style={{...C.btn2,opacity:lIdx===0?0.3:1}}>{ui.prev}</button>
+        {lIdx<topic.lessons.length-1?<button onClick={()=>setLIdx(lIdx+1)} style={{...C.btn,background:courseColor}}>{ui.next}</button>
+          :<button onClick={()=>setTab('practice')} style={{...C.btn,background:courseColor}}>{ui.startEx}</button>}
+      </div>
+    </main>}
+
+    {/* Practice tab */}
+    {topic&&tab==='practice'&&ex&&<main>
+      {/* Exercise header */}
+      <div style={{background:'rgba(16,24,48,0.4)',borderRadius:12,border:'1px solid #1e293b',padding:16,marginBottom:16}}>
+        <div style={{...C.fb}}>
+          <h3 style={{color:'#f1f5f9',fontSize:15,fontWeight:700}}>{transExTitle||ex.title}</h3>
+          <span style={{color:isDone(topic.id,cE)?'#10b981':'#64748b',fontSize:12}}>{isDone(topic.id,cE)?'✅ Done':'⬜ Todo'}</span>
+        </div>
+        <p style={{color:'#94a3b8',fontSize:13,marginTop:8}}>{transExTask||ex.task}</p>
+        {lang!=='en'&&transExTask&&<p style={{color:'#64748b',fontSize:11,marginTop:4}}>🇬🇧 {ex.task}</p>}
+      </div>
+
+      {/* Editor + Output */}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}} className="g2">
+        {/* Code editor */}
+        <div>
+          <div style={{...C.fb,marginBottom:6}}>
+            <span style={{color:'#64748b',fontSize:11}}>Python Editor</span>
+            <div style={{display:'flex',gap:4}}>
+              <button onClick={runCode} style={{...C.btn,padding:'4px 12px',background:courseColor,fontSize:11}}><I n="Play" s={12}/> {ui.run}</button>
+              <button onClick={()=>{setCode(ex.starterCode||'');setOutput('');setHint('');setShowSol(false)}} style={{...C.btn2,padding:'4px 10px',fontSize:11}}>{ui.reset}</button>
+            </div>
+          </div>
+          <textarea value={code} onChange={e=>setCode(e.target.value)} style={C.ed} spellCheck={false} placeholder="Write your code here..."/>
+        </div>
+
+        {/* Output panel */}
+        <div>
+          <div style={{...C.fb,marginBottom:6}}>
+            <span style={{color:'#64748b',fontSize:11}}>Output</span>
+            <div style={{display:'flex',gap:4}}>
+              <button onClick={()=>{setHint(ex.hint||'');setShowSol(false)}} style={{...C.btn2,padding:'4px 10px',fontSize:11}}>{hint?ui.hide:ui.hint}</button>
+              <button onClick={()=>{setShowSol(!showSol);setSolIdx(0)}} style={{...C.btn2,padding:'4px 10px',fontSize:11}}>{showSol?ui.hide:ui.viewSol}</button>
+              <button onClick={()=>setChatOn(true)} style={{...C.btn2,padding:'4px 10px',fontSize:11,color:courseColor}}><I n="Chat" s={12}/></button>
+            </div>
+          </div>
+          <div style={{background:'#0a0f1e',borderRadius:8,border:'1px solid #1e293b',padding:14,minHeight:180,fontFamily:'monospace',fontSize:13,whiteSpace:'pre-wrap',color:'#e2e8f0'}}>
+            {output||<span style={{color:'#475569'}}>Click Run to see output...</span>}
+          </div>
+          {hint&&!showSol&&<div style={{marginTop:8,padding:10,borderRadius:8,background:'rgba(251,191,36,0.1)',border:'1px solid rgba(251,191,36,0.3)',color:'#fbbf24',fontSize:12}}>💡 {hint}</div>}
+          {showSol&&<div style={{marginTop:8,padding:12,borderRadius:8,background:'rgba(16,185,129,0.1)',border:'1px solid rgba(16,185,129,0.3)'}}>
+            <div style={{display:'flex',gap:4,marginBottom:8}}>{ex.solutions.map((s,i)=><button key={i} onClick={()=>setSolIdx(i)} style={{padding:'3px 10px',borderRadius:4,border:'none',background:solIdx===i?courseColor:'#1e293b',color:solIdx===i?'#fff':'#94a3b8',cursor:'pointer',fontSize:11}}>{s.label}</button>)}</div>
+            <pre style={{color:'#e2e8f0',fontSize:12,fontFamily:'monospace',lineHeight:1.5}}>{ex.solutions[solIdx]?.code}</pre>
+            {ex.bestExplanation&&<p style={{color:'#94a3b8',fontSize:11,marginTop:8,paddingTop:8,borderTop:'1px solid #1e293b'}}>{ui.bestPractice} {ex.bestExplanation}</p>}
+            <button onClick={()=>setCode(ex.solutions[solIdx]?.code)} style={{marginTop:8,padding:'4px 10px',borderRadius:4,border:'none',background:'#1e293b',color:'#94a3b8',cursor:'pointer',fontSize:11}}>{ui.copy}</button>
+          </div>}
+        </div>
+      </div>
+
+      {/* Exercise nav */}
+      <div style={{marginTop:24,...C.fb}}>
+        <button onClick={()=>cE>0&&setCE(cE-1)} disabled={cE===0} style={{...C.btn2,opacity:cE===0?0.3:1}}>{ui.prev}</button>
+        <span style={{color:'#64748b',fontSize:12}}>{ui.ex} {cE+1} {ui.of} {topic.exercises.length}</span>
+        {cE<topic.exercises.length-1?<button onClick={()=>{setCE(cE+1);setOutput('');setHint('');setShowSol(false)}} style={{...C.btn,background:courseColor}}>{ui.next}</button>
+          :cT<topics.length-1&&tProg(cT)>=1?<button onClick={()=>{setCT(cT+1);setCE(0);setTab('learn');setLIdx(0)}} style={{...C.btn,background:courseColor}}>{ui.nextT}</button>
+          :<span style={{color:'#64748b',fontSize:13}}>{ui.complete}</span>}
+      </div>
+    </main>}
+
+    {/* Settings Modal */}
+    {showSettings&&<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.7)',zIndex:60,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={e=>e.target===e.currentTarget&&setShowSettings(false)}>
+      <div style={{background:'#0a0f1e',borderRadius:16,border:'1px solid #1e3a5f',padding:24,maxWidth:460,width:'100%',boxShadow:'0 12px 40px rgba(0,0,0,0.6)'}}>
+        <div style={{...C.fb,marginBottom:20}}><h3 style={{fontSize:18,fontWeight:700,color:'#f1f5f9'}}>⚙️ API Key Settings</h3><button onClick={()=>setShowSettings(false)} style={{background:'none',border:'none',color:'#64748b',cursor:'pointer',fontSize:20}}>×</button></div>
+        <p style={{color:'#94a3b8',fontSize:13,marginBottom:16,lineHeight:1.6}}>
+          {lang==='zh'?'输入你的 Anthropic API Key 来启用 AI 导师。':'Enter your Anthropic API Key to enable AI Tutor.'}
+          <br/><a href="https://console.anthropic.com/" target="_blank" style={{color:'#10b981'}}>→ console.anthropic.com</a>
+        </p>
+        <div style={{display:'flex',gap:8,marginBottom:12}}>
+          <input type="password" value={keyInput} onChange={e=>setKeyInput(e.target.value)} placeholder="sk-ant-..." onKeyDown={e=>{if(e.key==='Enter')saveKey()}} style={{flex:1,background:'#111827',color:'#e2e8f0',fontSize:13,padding:'10px 14px',borderRadius:8,border:'1px solid #1e293b',outline:'none',fontFamily:'monospace'}}/>
+          <button onClick={saveKey} disabled={!keyInput.trim()} style={{...C.btn,padding:'10px 18px',background:'#10b981',opacity:keyInput.trim()?1:0.4}}>Save</button>
+        </div>
+        {apiKey&&<div style={{...C.fc,gap:8}}>
+          <span style={{color:'#10b981',fontSize:12}}>✓ Key saved: {apiKey.slice(0,12)}...</span>
+          <button onClick={clearKey} style={{color:'#f87171',fontSize:12,background:'none',border:'none',cursor:'pointer',textDecoration:'underline'}}>Remove</button>
+        </div>}
+      </div>
+    </div>}
+
+    {/* Floating AI Tutor Button */}
+    {!chatOn&&apiKey&&topic&&<button onClick={()=>setChatOn(true)} style={{position:'fixed',bottom:20,right:20,width:52,height:52,borderRadius:26,background:`linear-gradient(135deg,${courseColor},${courseColor}cc)`,border:'none',color:'#fff',cursor:'pointer',boxShadow:'0 4px 20px rgba(0,0,0,0.4)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:40,transition:'transform 0.2s'}} onMouseOver={e=>e.currentTarget.style.transform='scale(1.1)'} onMouseOut={e=>e.currentTarget.style.transform='scale(1)'}><I n="Chat" s={22}/></button>}
+
+    {/* AI Tutor Chat */}
+    {chatOn&&topic&&<div style={{position:'fixed',bottom:16,right:16,width:380,height:480,background:'#0a0f1e',borderRadius:12,border:`1px solid ${courseColor}40`,boxShadow:'0 8px 32px rgba(0,0,0,0.5)',display:'flex',flexDirection:'column',zIndex:50}}>
+      <div style={{...C.fb,padding:12,borderBottom:'1px solid #1e293b'}}><div style={{...C.fc,gap:8}}><I n="Chat" s={14}/><span style={{fontWeight:600,color:courseColor,fontSize:14}}>{ui.tutor}</span></div><button onClick={()=>setChatOn(false)} style={{background:'none',border:'none',color:'#64748b',cursor:'pointer'}}><I n="X" s={14}/></button></div>
+      {!apiKey?<div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:24,textAlign:'center'}}>
+        <div style={{fontSize:40,marginBottom:12}}>🔑</div>
+        <p style={{color:'#e2e8f0',fontSize:14,fontWeight:600,marginBottom:8}}>{lang==='zh'?'需要 API Key':'API Key Required'}</p>
+        <p style={{color:'#64748b',fontSize:12,marginBottom:16}}>{lang==='zh'?'AI 导师需要 Anthropic API Key。':'AI Tutor requires an Anthropic API Key.'}</p>
+        <button onClick={()=>{setKeyInput('');setShowSettings(true)}} style={{...C.btn,padding:'8px 20px',background:'#10b981',fontSize:13}}>⚙️ {lang==='zh'?'设置 API Key':'Set API Key'}</button>
+      </div>
+      :<>
+      <div style={{flex:1,overflowY:'auto',padding:12,display:'flex',flexDirection:'column',gap:8}}>
+        {msgs.map((m,i)=><div key={i} style={{display:'flex',justifyContent:m.role==='user'?'flex-end':'flex-start'}}><div style={{maxWidth:'85%',padding:'8px 12px',borderRadius:8,fontSize:13,whiteSpace:'pre-wrap',background:m.role==='user'?courseColor:'#111827',color:'#e2e8f0'}}>{m.content}</div></div>)}
+        {chatLD&&<div style={{display:'flex'}}><div style={{background:'#111827',color:'#64748b',padding:'8px 12px',borderRadius:8,fontSize:13}} className="pulse">{ui.think}</div></div>}
+        <div ref={chatRef}/>
+      </div>
+      <div style={{padding:12,borderTop:'1px solid #1e293b'}}><div style={{display:'flex',gap:8}}>
+        <input value={chatIn} onChange={e=>setChatIn(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();chat()}}} placeholder={ui.ask} style={{flex:1,background:'#111827',color:'#e2e8f0',fontSize:13,padding:'8px 12px',borderRadius:8,border:'1px solid #1e293b',outline:'none'}}/>
+        <button onClick={chat} disabled={chatLD||!chatIn.trim()} style={{...C.btn,padding:8,background:courseColor,opacity:(chatLD||!chatIn.trim())?0.5:1}}><I n="Send" s={14}/></button>
+      </div></div>
+      </>}
+    </div>}
+  </div>);
+};
+
+ReactDOM.render(<App/>,document.getElementById('root'));
+</script>
+</body>
+</html>
